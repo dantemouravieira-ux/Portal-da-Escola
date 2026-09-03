@@ -350,6 +350,61 @@ async function fetchExternalWind(){
 	}
 }
 
+let temperatureMap;
+let temperatureMapLayer;
+
+async function initializeTemperatureMap(){
+	const mapElement = document.getElementById('temperatureMap');
+	if (!mapElement || typeof L === 'undefined') return;
+	const mapReset = document.getElementById('mapReset');
+	const cities = [
+		{ name: 'Canto do Buriti', latitude: -8.11, longitude: -42.94, school: true },
+		{ name: 'Teresina', latitude: -5.09, longitude: -42.80 },
+		{ name: 'Floriano', latitude: -6.77, longitude: -43.02 },
+		{ name: 'Picos', latitude: -7.08, longitude: -41.47 },
+		{ name: 'São Raimundo Nonato', latitude: -9.01, longitude: -42.70 },
+		{ name: 'Bom Jesus', latitude: -9.07, longitude: -44.36 },
+		{ name: 'Corrente', latitude: -10.44, longitude: -45.16 },
+		{ name: 'Parnaíba', latitude: -2.91, longitude: -41.78 },
+	];
+	if (!temperatureMap){
+		temperatureMap = L.map(mapElement, { scrollWheelZoom: false, zoomControl: true }).setView([-7.3, -42.8], 6.4);
+		const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(temperatureMap);
+		tileLayer.once('load', () => { mapElement.querySelector('.leaflet-tile-pane').style.filter = 'grayscale(1) opacity(.38)'; });
+		mapReset?.addEventListener('click', () => temperatureMap.setView([-7.3, -42.8], 6.4, { animate: true }));
+		temperatureMapLayer = L.layerGroup().addTo(temperatureMap);
+	}
+	temperatureMapLayer.clearLayers();
+	const status = document.getElementById('mapStatus');
+	const list = document.getElementById('hotCitiesList');
+	try{
+		const query = cities.map((city) => `${city.latitude},${city.longitude}`).join(';');
+		const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${query.split(';').map((value) => value.split(',')[0]).join(',')}&longitude=${query.split(';').map((value) => value.split(',')[1]).join(',')}&current=temperature_2m&timezone=America%2FFortaleza`);
+		if (!response.ok) throw new Error(`temperatura HTTP ${response.status}`);
+		const payload = await response.json();
+		const results = Array.isArray(payload) ? payload : [payload];
+		const measuredCities = cities.map((city, index) => ({ ...city, temperature: Number(results[index]?.current?.temperature_2m) })).filter((city) => Number.isFinite(city.temperature));
+		measuredCities.forEach((city) => {
+			const intensity = Math.max(0, Math.min(1, (city.temperature - 24) / 14));
+			L.circleMarker([city.latitude, city.longitude], { radius: 6 + intensity * 4, color: intensity > .65 ? '#c65043' : '#d98a3d', fillColor: intensity > .65 ? '#d96a5c' : '#f2b46b', fillOpacity: .35 + intensity * .2, weight: 1 }).addTo(temperatureMapLayer).bindPopup(`<strong>${city.name}</strong><br>Temperatura atual: ${city.temperature.toFixed(1)} °C`);
+			if (city.school){
+				const icon = L.divIcon({ className: '', html: '<span class="map-location-marker"></span>', iconSize: [16, 16], iconAnchor: [8, 8] });
+				L.marker([city.latitude, city.longitude], { icon }).addTo(temperatureMapLayer).bindPopup(`<strong>${city.name}</strong><br>Local da escola · ${city.temperature.toFixed(1)} °C`);
+			}
+		});
+		measuredCities.sort((first, second) => second.temperature - first.temperature);
+		list.replaceChildren(...measuredCities.slice(0, 3).map((city) => {
+			const item = document.createElement('li');
+			item.innerHTML = `${city.name}<span class="hot-city-temp">${city.temperature.toFixed(1)} °C</span>`;
+			return item;
+		}));
+		status.textContent = `Atualizado às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+	}catch(error){
+		console.warn('Não foi possível carregar o mapa de temperaturas:', error);
+		status.textContent = 'Temperaturas indisponíveis no momento.';
+	}
+}
+
 function formatChartTime(date){
 	return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
@@ -466,6 +521,9 @@ function ensureChart(){
 			interaction: { mode: 'index', intersect: false },
 			plugins: {
 				tooltip: {
+						padding: 10,
+						bodyFont: { family: 'Inter', size: 13 },
+						titleFont: { family: 'IBM Plex Mono', size: 12 },
 					callbacks: {
 						title: (items) => items[0]?.label || '',
 						label: (context) => {
@@ -482,9 +540,9 @@ function ensureChart(){
 				}
 			},
 				scales: {
-					x: { ticks: { color: '#a9bdcc', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: 'rgba(132,166,190,.16)' } },
-					temperature: { type: 'linear', position: 'left', min: 0, max: 45, ticks: { color: '#ff9ca2', precision: 0, callback: (value) => `${value}°` }, grid: { color: 'rgba(132,166,190,.16)' } },
-					humidity: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#8bcfff', precision: 0, callback: (value) => `${value}%` }, grid: { drawOnChartArea: false } }
+					x: { ticks: { color: '#a9bdcc', maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 11 } }, grid: { color: 'rgba(132,166,190,.16)' } },
+					temperature: { type: 'linear', position: 'left', min: 0, max: 45, ticks: { color: '#ff9ca2', precision: 0, maxTicksLimit: 6, callback: (value) => `${value}°` }, grid: { color: 'rgba(132,166,190,.16)' } },
+					humidity: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#8bcfff', precision: 0, maxTicksLimit: 6, callback: (value) => `${value}%` }, grid: { drawOnChartArea: false } }
 				}
 		}
 	});
@@ -605,6 +663,8 @@ startCountdown();
 loadSavedPortalData();
 fetchExternalWind();
 setInterval(fetchExternalWind, 10 * 60 * 1000);
+initializeTemperatureMap();
+setInterval(initializeTemperatureMap, 10 * 60 * 1000);
 tempReading.classList.add('is-loading');
 umidReading.classList.add('is-loading');
 windReading.classList.add('is-loading');

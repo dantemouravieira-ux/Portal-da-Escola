@@ -7,6 +7,7 @@
 <title>Portal da Escola</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231b1f2a'/><circle cx='12' cy='12' r='6' fill='none' stroke='%23d98a3d' stroke-width='2'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css.css">
@@ -135,6 +136,14 @@
     <div class="chart-wrap"><canvas id="meuGrafico"></canvas><div class="chart-tooltip" id="chartTooltip" role="status"></div></div>
   </section>
 
+  <section class="panel map-panel" aria-labelledby="map-title">
+    <div class="chart-heading"><div><span class="eyebrow">Temperatura no Piauí</span><h2 id="map-title">Mapa das áreas mais quentes</h2></div><span class="live-badge"><i></i> ao vivo</span></div>
+    <div class="map-layout">
+      <div class="map-frame"><div id="temperatureMap" class="temperature-map" role="application" aria-label="Mapa com temperaturas atuais das principais cidades do Piauí"></div><button class="map-reset" id="mapReset" type="button" aria-label="Voltar à visão geral do Piauí" title="Voltar à visão geral">⌂</button></div>
+      <aside class="hot-cities" aria-labelledby="hot-cities-title"><h3 id="hot-cities-title">Cidades mais quentes</h3><p id="mapStatus" class="map-status">Carregando temperaturas...</p><ol id="hotCitiesList"></ol></aside>
+    </div>
+  </section>
+
   <footer>
     <span>ESP32 · DHT11 · estação do pátio</span>
     <span id="lastUpdated">última leitura: --</span>
@@ -144,6 +153,7 @@
 </div>
 
 <script type="module" src="java.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </body>
 </html>
