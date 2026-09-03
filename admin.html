@@ -13,7 +13,7 @@
   <header>
     <div>
       <img class="school-logo" src="logo-ceti.svg" alt="CETI Nonato Valente">
-      <a class="back-link" href="html.html">← Voltar ao portal</a>
+      <a class="back-link" href="index.html">← Voltar ao portal</a>
       <span class="eyebrow">Área restrita · administração</span>
       <h1>Gestão da escola</h1>
     </div>
@@ -48,9 +48,8 @@
         </form>
         <form class="admin-form" id="menuForm">
           <h3>Atualização do cardápio</h3>
-          <label>Prato principal <input id="menuMain" type="text" value="Arroz, feijão e frango assado"></label>
-          <label>Acompanhamento <input id="menuSide" type="text" value="Salada, legumes e fruta"></label>
-          <label>Horário <input id="menuTime" type="text" value="11:30–13:00"></label>
+          <label>Dia da semana <select id="menuDay"><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option></select></label>
+          <div class="menu-day"><label>Prato principal <input id="menuMain" type="text" value="Arroz, feijão e frango assado"></label><label>Acompanhamento <input id="menuSide" type="text" value="Salada, legumes e fruta"></label><label>Horário <input id="menuTime" type="text" value="11:30–13:00"></label></div>
           <button class="action-button" type="submit">Publicar cardápio</button>
           <small class="form-feedback" id="menuFeedback" role="status"></small>
         </form>

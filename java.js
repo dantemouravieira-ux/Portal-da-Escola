@@ -88,7 +88,10 @@ function initializeAdministration(){
 }
 
 function loadSavedPortalData(){
-	const savedMenu = JSON.parse(localStorage.getItem('menu') || 'null');
+	const weeklyMenu = JSON.parse(localStorage.getItem('weeklyMenu') || 'null');
+	const legacyMenu = JSON.parse(localStorage.getItem('menu') || 'null');
+	const today = new Date().getDay();
+	const savedMenu = (weeklyMenu && weeklyMenu[today]) || legacyMenu;
 	if (savedMenu){
 		document.getElementById('menuDisplayMain').textContent = savedMenu.main;
 		document.getElementById('menuDisplayDetails').textContent = `${savedMenu.side} · ${savedMenu.time}`;

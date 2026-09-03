@@ -234,6 +234,9 @@ main{ display: grid; gap: 22px; }
 .admin-event-item small{ margin-top: 4px; font-size: 10px; }
 .remove-event{ border: 1px solid var(--danger); border-radius: 3px; padding: 7px 9px; color: var(--danger); background: transparent; cursor: pointer; font: 11px 'IBM Plex Mono', monospace; }
 .admin-form h3{ margin: 0 0 18px; font: 18px 'Fraunces', serif; font-weight: 500; }
+.menu-day{ padding: 12px; border: 1px solid var(--border); background: var(--bg-panel); }
+.menu-day h4{ margin: 0 0 10px; color: var(--accent-humid); font: 12px 'IBM Plex Mono', monospace; text-transform: uppercase; }
+.menu-day label{ margin: 9px 0; }
 .admin-form label{ display: grid; gap: 7px; color: var(--text-muted); font-size: 11px; margin: 12px 0; }
 .admin-form label span{ display: flex; align-items: center; gap: 6px; }
 .admin-form input[type="text"], .admin-form input[type="number"]{ width: 100%; padding: 9px 10px; color: var(--text); background: var(--bg-panel); border: 1px solid var(--border); border-radius: 3px; font: 12px 'Inter', sans-serif; }

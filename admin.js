@@ -106,14 +106,31 @@ document.getElementById('settingsForm').addEventListener('submit', (event) => {
 	feedback('settingsFeedback', 'Configurações salvas.');
 });
 
+const menuDay = document.getElementById('menuDay');
+const savedWeeklyMenu = JSON.parse(localStorage.getItem('weeklyMenu') || 'null') || {};
+const legacyMenu = JSON.parse(localStorage.getItem('menu') || 'null');
+if (!savedWeeklyMenu[1] && legacyMenu) savedWeeklyMenu[1] = legacyMenu;
+
+function loadMenuDay(day){
+	const menu = savedWeeklyMenu[day] || { main: '', side: '', time: '11:30–13:00' };
+	document.getElementById('menuMain').value = menu.main || '';
+	document.getElementById('menuSide').value = menu.side || '';
+	document.getElementById('menuTime').value = menu.time || '';
+}
+
+loadMenuDay(menuDay.value);
+menuDay.addEventListener('change', () => loadMenuDay(menuDay.value));
+
 document.getElementById('menuForm').addEventListener('submit', (event) => {
 	event.preventDefault();
-	localStorage.setItem('menu', JSON.stringify({
-		main: document.getElementById('menuMain').value,
-		side: document.getElementById('menuSide').value,
-		time: document.getElementById('menuTime').value,
-	}));
-	feedback('menuFeedback', 'Cardápio publicado no portal.');
+	savedWeeklyMenu[menuDay.value] = {
+		main: document.getElementById('menuMain').value.trim(),
+		side: document.getElementById('menuSide').value.trim(),
+		time: document.getElementById('menuTime').value.trim(),
+	};
+	localStorage.setItem('weeklyMenu', JSON.stringify(savedWeeklyMenu));
+	localStorage.setItem('menu', JSON.stringify(savedWeeklyMenu[menuDay.value]));
+	feedback('menuFeedback', 'Cardápio do dia publicado no portal.');
 });
 
 document.getElementById('classForm').addEventListener('submit', (event) => {
