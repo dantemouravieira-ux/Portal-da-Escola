@@ -469,20 +469,24 @@ main{ display: grid; gap: 22px; }
 .chart-wrap{ position: relative; height: 390px; min-height: 280px; }
 .chart-wrap canvas{ display: block; width: 100% !important; height: 100% !important; }
 .chart-tooltip{ position: absolute; display: none; pointer-events: none; z-index: 3; padding: 8px 10px; border: 1px solid var(--accent-temp); border-radius: 3px; background: var(--accent-ink); color: #f6f3eb; font: 11px 'IBM Plex Mono', monospace; white-space: nowrap; box-shadow: 0 5px 14px rgba(0,0,0,.2); }
-.map-panel{ margin-top: 20px; padding: 16px; }
+.map-panel{ margin-top: 18px; padding: 10px 12px; border: 0; background: transparent; }
+.map-mini-header{ display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.map-mini-header h2{ margin: 0; font-size: 14px; }
 .map-layout{ display: grid; gap: 10px; }
 .map-frame{ position: relative; }
 .temperature-map{ min-height: 210px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; z-index: 0; background: #e8ece9; }
 .map-reset{ position: absolute; right: 10px; bottom: 28px; z-index: 400; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #c5cec8; border-radius: 3px; color: #20312d; background: rgba(255,255,255,.9); font-size: 17px; cursor: pointer; }
 .map-reset:hover{ background: #fff; border-color: var(--accent-temp); color: var(--accent-temp); }
 .leaflet-control-zoom a{ width: 30px !important; height: 30px !important; line-height: 28px !important; }
-.hot-cities{ display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px 16px; padding: 10px 0 0; background: transparent; border-top: 1px solid var(--border); }
+.hot-cities{ display: grid; gap: 6px; padding: 0; background: transparent; }
 .hot-cities h3{ margin: 0; font: 15px 'Fraunces', serif; font-weight: 500; white-space: nowrap; }
-.map-status{ margin: 0; color: var(--text-muted); font-size: 11px; white-space: nowrap; }
-.hot-cities ol{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; min-width: 0; margin: 0; padding-left: 20px; }
-.hot-cities li{ min-width: 0; padding-left: 3px; color: var(--text); font-size: 12px; overflow-wrap: anywhere; }
-.hot-cities li::marker{ color: var(--accent-temp); font-family: 'IBM Plex Mono', monospace; }
-.hot-city-temp{ display: block; margin-top: 2px; color: var(--accent-temp); font: 12px 'IBM Plex Mono', monospace; }
+.map-status{ margin: 0; color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+.hot-cities ol{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.hot-city-item{ display: flex; align-items: center; gap: 6px; min-width: 0; padding: 7px 8px; border: 0; border-radius: 6px; background: rgba(255,255,255,.02); }
+.city-rank{ display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.04); color: var(--text-muted); font: 700 9px 'IBM Plex Mono', monospace; }
+.hot-city-main{ display: grid; min-width: 0; }
+.hot-city-name{ color: var(--text); font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hot-city-temp{ display: block; margin-top: 1px; color: var(--accent-temp); font: 10px 'IBM Plex Mono', monospace; }
 .leaflet-container{ font-family: 'Inter', sans-serif; background: #f1f3f0; }
 .leaflet-control-attribution{ font-size: 9px; opacity: .7; }
 .leaflet-popup-content{ margin: 10px 12px; font-size: 12px; }
@@ -605,11 +609,14 @@ footer{
 	.map-layout{ grid-template-columns: 1fr; gap: 12px; }
 	.temperature-map{ min-height: 190px; }
 	.map-reset{ right: 8px; bottom: 28px; width: 40px; height: 40px; }
-	.hot-cities{ display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; padding-top: 10px; }
-	.hot-cities h3{ margin-bottom: 7px; }
-	.map-status{ justify-self: end; align-self: center; }
-	.hot-cities ol{ grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-left: 20px; }
-	.hot-cities li{ font-size: 11px; }
+	.hot-cities{ display: grid; grid-template-columns: 1fr; gap: 10px; padding-top: 10px; }
+	.hot-cities h3{ margin-bottom: 0; }
+	.map-status{ justify-self: start; align-self: center; }
+	.hot-cities ol{ grid-column: 1 / -1; grid-template-columns: 1fr; gap: 8px; padding: 0; list-style: none; }
+	.hot-city-item{ padding: 10px 12px; border-radius: 12px; }
+	.hot-city-name{ font-size: 13px; }
+	.hot-city-temp{ font-size: 12px; }
+	.city-rank{ width: 30px; height: 30px; font-size: 11px; }
 	footer{ flex-direction: column; gap: 8px; line-height: 1.5; }
 }
 

@@ -350,13 +350,7 @@ async function fetchExternalWind(){
 	}
 }
 
-let temperatureMap;
-let temperatureMapLayer;
-
 async function initializeTemperatureMap(){
-	const mapElement = document.getElementById('temperatureMap');
-	if (!mapElement || typeof L === 'undefined') return;
-	const mapReset = document.getElementById('mapReset');
 	const cities = [
 		{ name: 'Canto do Buriti', latitude: -8.11, longitude: -42.94, school: true },
 		{ name: 'Teresina', latitude: -5.09, longitude: -42.80 },
@@ -367,14 +361,6 @@ async function initializeTemperatureMap(){
 		{ name: 'Corrente', latitude: -10.44, longitude: -45.16 },
 		{ name: 'Parnaíba', latitude: -2.91, longitude: -41.78 },
 	];
-	if (!temperatureMap){
-		temperatureMap = L.map(mapElement, { scrollWheelZoom: false, zoomControl: true }).setView([-7.3, -42.8], 6.4);
-		const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(temperatureMap);
-		tileLayer.once('load', () => { mapElement.querySelector('.leaflet-tile-pane').style.filter = 'grayscale(1) opacity(.38)'; });
-		mapReset?.addEventListener('click', () => temperatureMap.setView([-7.3, -42.8], 6.4, { animate: true }));
-		temperatureMapLayer = L.layerGroup().addTo(temperatureMap);
-	}
-	temperatureMapLayer.clearLayers();
 	const status = document.getElementById('mapStatus');
 	const list = document.getElementById('hotCitiesList');
 	try{
@@ -384,23 +370,17 @@ async function initializeTemperatureMap(){
 		const payload = await response.json();
 		const results = Array.isArray(payload) ? payload : [payload];
 		const measuredCities = cities.map((city, index) => ({ ...city, temperature: Number(results[index]?.current?.temperature_2m) })).filter((city) => Number.isFinite(city.temperature));
-		measuredCities.forEach((city) => {
-			const intensity = Math.max(0, Math.min(1, (city.temperature - 24) / 14));
-			L.circleMarker([city.latitude, city.longitude], { radius: 6 + intensity * 4, color: intensity > .65 ? '#c65043' : '#d98a3d', fillColor: intensity > .65 ? '#d96a5c' : '#f2b46b', fillOpacity: .35 + intensity * .2, weight: 1 }).addTo(temperatureMapLayer).bindPopup(`<strong>${city.name}</strong><br>Temperatura atual: ${city.temperature.toFixed(1)} °C`);
-			if (city.school){
-				const icon = L.divIcon({ className: '', html: '<span class="map-location-marker"></span>', iconSize: [16, 16], iconAnchor: [8, 8] });
-				L.marker([city.latitude, city.longitude], { icon }).addTo(temperatureMapLayer).bindPopup(`<strong>${city.name}</strong><br>Local da escola · ${city.temperature.toFixed(1)} °C`);
-			}
-		});
 		measuredCities.sort((first, second) => second.temperature - first.temperature);
-		list.replaceChildren(...measuredCities.slice(0, 3).map((city) => {
+		list.replaceChildren(...measuredCities.slice(0, 3).map((city, index) => {
 			const item = document.createElement('li');
-			item.innerHTML = `${city.name}<span class="hot-city-temp">${city.temperature.toFixed(1)} °C</span>`;
+			item.className = 'hot-city-item';
+			const badge = index === 0 ? '1º' : index === 1 ? '2º' : '3º';
+			item.innerHTML = `<span class="city-rank">${badge}</span><div class="hot-city-main"><span class="hot-city-name">${city.name}</span><span class="hot-city-temp">${city.temperature.toFixed(1)} °C</span></div>`;
 			return item;
 		}));
 		status.textContent = `Atualizado às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 	}catch(error){
-		console.warn('Não foi possível carregar o mapa de temperaturas:', error);
+		console.warn('Não foi possível carregar as cidades mais quentes:', error);
 		status.textContent = 'Temperaturas indisponíveis no momento.';
 	}
 }

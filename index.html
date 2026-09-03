@@ -136,12 +136,12 @@
     <div class="chart-wrap"><canvas id="meuGrafico"></canvas><div class="chart-tooltip" id="chartTooltip" role="status"></div></div>
   </section>
 
-  <section class="panel map-panel" aria-labelledby="map-title">
-    <div class="chart-heading"><div><span class="eyebrow">Temperatura no Piauí</span><h2 id="map-title">Mapa das áreas mais quentes</h2></div><span class="live-badge"><i></i> ao vivo</span></div>
-    <div class="map-layout">
-      <div class="map-frame"><div id="temperatureMap" class="temperature-map" role="application" aria-label="Mapa com temperaturas atuais das principais cidades do Piauí"></div><button class="map-reset" id="mapReset" type="button" aria-label="Voltar à visão geral do Piauí" title="Voltar à visão geral">⌂</button></div>
-      <aside class="hot-cities" aria-labelledby="hot-cities-title"><h3 id="hot-cities-title">Cidades mais quentes</h3><p id="mapStatus" class="map-status">Carregando temperaturas...</p><ol id="hotCitiesList"></ol></aside>
-    </div>
+  <section class="panel map-panel" aria-labelledby="hot-cities-title">
+    <div class="map-mini-header"><span class="eyebrow">Temperatura no Piauí</span><h2 id="hot-cities-title">Top 3</h2></div>
+    <aside class="hot-cities" aria-live="polite">
+      <p id="mapStatus" class="map-status">Carregando temperaturas...</p>
+      <ol id="hotCitiesList"></ol>
+    </aside>
   </section>
 
   <footer>
