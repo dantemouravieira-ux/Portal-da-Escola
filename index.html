@@ -59,17 +59,8 @@
     </section>
 
     <section class="portal-section" id="aulas">
-      <div class="section-heading"><div><span class="eyebrow">Aulas</span><h2>Linha do tempo do dia</h2></div><span class="date-label" id="timelineDate">Terça, 02 de setembro</span></div>
-      <div class="timeline">
-        <div class="timeline-item" data-start="06:50" data-end="07:50"><span class="time">06:50</span><div><strong>Aula 1</strong><small>Encerrado</small></div></div>
-        <div class="timeline-item" data-start="07:50" data-end="08:50"><span class="time">07:50</span><div><strong>Aula 2</strong><small>Em andamento</small></div></div>
-        <div class="timeline-item" data-start="08:50" data-end="09:10"><span class="time">08:50</span><div><strong>Intervalo</strong><small>Pausa</small></div></div>
-        <div class="timeline-item" data-start="11:10" data-end="12:50"><span class="time">11:10</span><div><strong>Almoço</strong><small>12:10–12:50</small></div></div>
-        <div class="timeline-item" data-start="12:50" data-end="13:50"><span class="time">12:50</span><div><strong>Aula 6</strong><small>Próximo</small></div></div>
-        <div class="timeline-item" data-start="13:50" data-end="14:50"><span class="time">13:50</span><div><strong>Aula 7</strong><small>Próximo</small></div></div>
-        <div class="timeline-item" data-start="14:50" data-end="15:10"><span class="time">14:50</span><div><strong>Intervalo</strong><small>Pausa</small></div></div>
-        <div class="timeline-item" data-start="15:10" data-end="16:10"><span class="time">15:10</span><div><strong>Aula 8</strong><small>Próximo</small></div></div>
-      </div>
+      <div class="section-heading"><div><span class="eyebrow">Aulas</span><h2>Linha do tempo do dia</h2></div><div class="timeline-tools"><span class="date-label" id="timelineDate">Terça, 02 de setembro</span><button class="timeline-next" id="timelineNext" type="button" aria-label="Avançar para a próxima aula" title="Próxima aula">›</button></div></div>
+      <div class="timeline" id="timeline"></div>
     </section>
 
     <section class="portal-section" id="avisos" hidden>
@@ -80,15 +71,15 @@
     <section class="portal-section" id="turmas">
       <div class="section-heading"><div><span class="eyebrow">Páginas das turmas</span><h2>Grades e perfis</h2></div></div>
       <div class="class-grid" id="classGrid">
-        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS A</h3><p>Desenvolvimento de Sistemas</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS B</h3><p>Desenvolvimento de Sistemas</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card featured-class"><span class="class-year">2ª série</span><h3>2ª DS</h3><p>Desenvolvimento de Sistemas</p><a href="horario-ds.html" target="_blank" rel="noopener">Abrir horário ↗</a></article>
-        <article class="class-card"><span class="class-year">2ª série</span><h3>2ª marketing</h3><p>Turma integrada</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª manhã</h3><p>Período da manhã</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª tarde</h3><p>Período da tarde</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">9º ano</span><h3>9º manhã</h3><p>Período da manhã</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde A</h3><p>Período da tarde</p><a href="#turmas">Ver grade <span>→</span></a></article>
-        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde B</h3><p>Período da tarde</p><a href="#turmas">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS A</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Silas</p><a href="horario-ds.html?turma=ds1a">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS B</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Silvana</p><a href="horario-ds.html?turma=ds1b">Ver grade <span>→</span></a></article>
+        <article class="class-card featured-class"><span class="class-year">2ª série</span><h3>2ª DS</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Vandson</p><a href="horario-ds.html?turma=ds2" target="_blank" rel="noopener">Abrir horário ↗</a></article>
+        <article class="class-card"><span class="class-year">2ª série</span><h3>2ª marketing</h3><p>Turma integrada<br>Professor responsável: Valdeir</p><a href="horario-ds.html?turma=marketing2">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª manhã</h3><p>Período da manhã</p><a href="horario-ds.html?turma=3manha">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª tarde</h3><p>Período da tarde</p><a href="horario-ds.html?turma=3tarde">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º manhã</h3><p>Período da manhã</p><a href="horario-ds.html?turma=9manha">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde A</h3><p>Período da tarde</p><a href="horario-ds.html?turma=9tardea">Ver grade <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde B</h3><p>Período da tarde</p><a href="horario-ds.html?turma=9tardeb">Ver grade <span>→</span></a></article>
       </div>
     </section>
 

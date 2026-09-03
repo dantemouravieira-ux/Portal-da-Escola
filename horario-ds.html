@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Horário · 2º DS</title>
+<title>Horários · Portal da Escola</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css.css">
@@ -11,33 +11,19 @@
 <body>
 <div class="page schedule-page">
   <header>
-    <div><a class="back-link" href="index.html">← Voltar ao portal</a><span class="eyebrow">2º DS · integral</span><h1>Horário das aulas</h1></div>
+    <div><a class="back-link" href="index.html">← Voltar ao portal</a><span class="eyebrow" id="scheduleClassType">Horários das turmas</span><h1>Horário das aulas</h1></div>
     <span class="status-pill">2026/1</span>
   </header>
   <main>
     <section class="portal-section schedule-section">
-      <div class="section-heading"><div><span class="eyebrow">Desenvolvimento de Sistemas</span><h2>Grade semanal</h2></div><span class="date-label">Segunda a sexta</span></div>
+      <div class="section-heading"><div><span class="eyebrow" id="scheduleSchool">CETI Nonato Valente</span><h2 id="scheduleTitle">Grade semanal</h2><span class="schedule-teacher" id="scheduleTeacher"></span></div><span class="date-label">Segunda a sábado</span></div>
       <div class="schedule-scroll">
-        <table class="schedule-table"><caption>Grade semanal do 2º ano de Desenvolvimento de Sistemas</caption>
-          <thead><tr><th scope="col">Horário</th><th scope="col">Segunda</th><th scope="col">Terça</th><th scope="col">Quarta</th><th scope="col">Quinta</th><th scope="col">Sexta</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">06:50–07:50</th><td>Percursos de aprofundamento e integração de estudos · Matemática / recomposição da aprendizagem</td><td>Educação Física</td><td>Inteligência Artificial</td><td>Biologia</td><td>Língua estrangeira · Inglês</td></tr>
-            <tr><th scope="row">07:50–08:50</th><td>Matemática</td><td>Geografia</td><td>Biologia</td><td>Programação estruturada</td><td>Língua estrangeira · Inglês</td></tr>
-            <tr class="break-row"><th scope="row">08:50–09:10</th><td colspan="5">Intervalo</td></tr>
-            <tr><th scope="row">09:10–10:10</th><td>Programação estruturada</td><td>Percursos de aprofundamento e integração de estudos · Língua Portuguesa / recomposição da aprendizagem</td><td>Programação estruturada</td><td>Programação estruturada</td><td>Matemática</td></tr>
-            <tr><th scope="row">10:10–11:10</th><td>Programação estruturada</td><td>Percursos de aprofundamento e integração de estudos · Língua Portuguesa / recomposição da aprendizagem</td><td>Programação estruturada</td><td>Língua Portuguesa</td><td>Percursos de aprofundamento e integração de estudos · Língua Espanhola</td></tr>
-            <tr><th scope="row">11:10–12:10</th><td>História</td><td>Programação estruturada</td><td>Arte</td><td>Língua Portuguesa</td><td>Matemática</td></tr>
-            <tr class="break-row"><th scope="row">12:10–12:50</th><td colspan="5">Almoço</td></tr>
-            <tr><th scope="row">12:50–13:50</th><td>Filosofia</td><td>Percursos de aprofundamento e integração de estudos · Esporte / cultura / clube de leitura ou robótica</td><td>Percursos de aprofundamento e integração de estudos · Esporte / cultura / clube de leitura ou robótica</td><td>Percursos de aprofundamento e integração de estudos · Educação financeira</td><td>Física</td></tr>
-            <tr><th scope="row">13:50–14:50</th><td>Sociologia</td><td>Pensamento Computacional II</td><td>Percursos de aprofundamento e integração de estudos · Esporte / cultura / clube de leitura ou robótica</td><td>Percursos de aprofundamento e integração de estudos · Vida / empreendedorismo</td><td>Física</td></tr>
-            <tr class="break-row"><th scope="row">14:50–15:10</th><td colspan="5">Intervalo</td></tr>
-            <tr><th scope="row">15:10–16:10</th><td>Química</td><td>Percursos de aprofundamento e integração de estudos · Monitoria / reforço de estudo</td><td>Língua Portuguesa</td><td>Mentorias TEC II</td><td>Química</td></tr>
-          </tbody>
-        </table>
+        <table class="schedule-table"><caption id="scheduleCaption">Grade semanal da turma</caption><thead><tr><th scope="col">Horário</th><th scope="col">Segunda</th><th scope="col">Terça</th><th scope="col">Quarta</th><th scope="col">Quinta</th><th scope="col">Sexta</th><th scope="col">Sábado</th></tr></thead><tbody id="scheduleBody"></tbody></table>
       </div>
       <p class="schedule-note">Quadro de horário · Unidade escolar CETI Nonato Velente</p>
     </section>
   </main>
 </div>
+<script type="module" src="horarios.js"></script>
 </body>
 </html>

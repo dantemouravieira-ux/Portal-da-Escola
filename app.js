@@ -93,15 +93,27 @@ function initializeChallenge(){
 	});
 }
 
-function loadSavedPortalData(){
+function updateMenuDisplay(){
 	const weeklyMenu = JSON.parse(localStorage.getItem('weeklyMenu') || 'null');
 	const legacyMenu = JSON.parse(localStorage.getItem('menu') || 'null');
-	const today = new Date().getDay();
-	const savedMenu = (weeklyMenu && weeklyMenu[today]) || legacyMenu;
-	if (savedMenu){
-		document.getElementById('menuDisplayMain').textContent = savedMenu.main;
-		document.getElementById('menuDisplayDetails').textContent = `${savedMenu.side} · ${savedMenu.time}`;
+	const savedMenu = (weeklyMenu && weeklyMenu[new Date().getDay()]) || legacyMenu;
+	const menuMain = document.getElementById('menuDisplayMain');
+	const menuDetails = document.getElementById('menuDisplayDetails');
+	if (!savedMenu || !savedMenu.main){
+		menuMain.textContent = 'Cardápio ainda não publicado';
+		menuDetails.textContent = 'Consulte a administração para saber o almoço de hoje';
+		return;
 	}
+	menuMain.textContent = savedMenu.main;
+	menuDetails.textContent = `${savedMenu.side} · ${savedMenu.time}`;
+}
+
+function loadSavedPortalData(){
+	updateMenuDisplay();
+	window.addEventListener('storage', (event) => {
+		if (event.key === 'weeklyMenu' || event.key === 'menu') updateMenuDisplay();
+	});
+	setInterval(updateMenuDisplay, 60 * 1000);
 
 	const savedClasses = JSON.parse(localStorage.getItem('classes') || '[]');
 	savedClasses.forEach((savedClass) => {

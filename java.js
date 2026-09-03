@@ -87,15 +87,27 @@ function initializeAdministration(){
 	});
 }
 
-function loadSavedPortalData(){
+function updateMenuDisplay(){
 	const weeklyMenu = JSON.parse(localStorage.getItem('weeklyMenu') || 'null');
 	const legacyMenu = JSON.parse(localStorage.getItem('menu') || 'null');
-	const today = new Date().getDay();
-	const savedMenu = (weeklyMenu && weeklyMenu[today]) || legacyMenu;
-	if (savedMenu){
-		document.getElementById('menuDisplayMain').textContent = savedMenu.main;
-		document.getElementById('menuDisplayDetails').textContent = `${savedMenu.side} · ${savedMenu.time}`;
+	const savedMenu = (weeklyMenu && weeklyMenu[new Date().getDay()]) || legacyMenu;
+	const menuMain = document.getElementById('menuDisplayMain');
+	const menuDetails = document.getElementById('menuDisplayDetails');
+	if (!savedMenu || !savedMenu.main){
+		menuMain.textContent = 'Cardápio ainda não publicado';
+		menuDetails.textContent = 'Consulte a administração para saber o almoço de hoje';
+		return;
 	}
+	menuMain.textContent = savedMenu.main;
+	menuDetails.textContent = `${savedMenu.side} · ${savedMenu.time}`;
+}
+
+function loadSavedPortalData(){
+	updateMenuDisplay();
+	window.addEventListener('storage', (event) => {
+		if (event.key === 'weeklyMenu' || event.key === 'menu') updateMenuDisplay();
+	});
+	setInterval(updateMenuDisplay, 60 * 1000);
 
 	const savedClasses = JSON.parse(localStorage.getItem('classes') || '[]');
 	savedClasses.forEach((savedClass) => {
@@ -135,7 +147,8 @@ function startCountdown(){
 	const currentPeriodDetail = document.getElementById('currentPeriodDetail');
 	const nextPeriod = document.getElementById('nextPeriod');
 	const timelineDate = document.getElementById('timelineDate');
-	const timelineItems = [...document.querySelectorAll('.timeline-item[data-start]')];
+	const timeline = document.getElementById('timeline');
+	const timelineNext = document.getElementById('timelineNext');
 	const periods = [
 		{ start: '06:50', end: '07:50', label: 'Aula 1', detail: 'Período da manhã' },
 		{ start: '07:50', end: '08:50', label: 'Aula 2', detail: 'Período da manhã' },
@@ -149,6 +162,20 @@ function startCountdown(){
 		{ start: '14:50', end: '15:10', label: 'Intervalo', detail: 'Pausa' },
 		{ start: '15:10', end: '16:10', label: 'Aula 8', detail: 'Período da tarde' },
 	];
+	periods.forEach((period) => {
+		const item = document.createElement('div');
+		item.className = 'timeline-item';
+		item.dataset.start = period.start;
+		item.dataset.end = period.end;
+		item.innerHTML = `<span class="time">${period.start}</span><div><strong>${period.label}</strong><small></small></div>`;
+		timeline?.append(item);
+	});
+	const timelineItems = [...document.querySelectorAll('.timeline-item[data-start]')];
+	let lastCurrentIndex = -1;
+	timelineNext?.addEventListener('click', () => {
+		const nextItem = timelineItems.find((item) => !item.classList.contains('done')) || timelineItems[0];
+		nextItem?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+	});
 	const toMinutes = (value) => { const [hours, minutes] = value.split(':').map(Number); return hours * 60 + minutes; };
 	const formatDate = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 
@@ -165,6 +192,11 @@ function startCountdown(){
 			else if (nowMinutes >= start) status.textContent = 'Em andamento';
 			else status.textContent = item.querySelector('strong').textContent === 'Intervalo' ? 'Pausa' : 'Próximo';
 		});
+		const currentIndex = timelineItems.findIndex((item) => item.classList.contains('current'));
+		if (currentIndex >= 0 && currentIndex !== lastCurrentIndex){
+			timelineItems[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+			lastCurrentIndex = currentIndex;
+		}
 	}
 
 	function updateCountdown(){
