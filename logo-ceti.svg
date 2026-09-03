@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-labelledby="title">
+  <title>Centro Estadual de Tempo Integral Nonato Valente</title>
+  <defs>
+    <path id="topArc" d="M 48,180 A 132,132 0 0 1 312,180"/>
+    <path id="bottomArc" d="M 48,190 A 132,132 0 0 0 312,190"/>
+  </defs>
+  <circle cx="180" cy="180" r="170" fill="#fff" stroke="#f5aa16" stroke-width="6"/>
+  <circle cx="180" cy="180" r="137" fill="#3f76bf" stroke="#f5aa16" stroke-width="9"/>
+  <path fill="#fff" d="M143 118c-12 31-18 70-8 124 18-13 38-21 63-27l70-91-92 57c-5-26-14-47-33-63zm76 99c-31 2-59 9-84 23v11c31-13 60-18 91-18l50-73-57 57z"/>
+  <path fill="#f5aa16" d="M67 166c22 17 40 28 63 44-8-17-15-35-13-51-14-17-35-10-50 7zm68 42c-14-18-28-29-45-41 7 25 26 43 48 54zM153 177c31-29 66-48 130-51-28 20-59 29-91 50l-39 32z"/>
+  <path fill="#fff" d="M111 264h138v12H111z"/>
+  <text x="180" y="306" fill="#fff" font-family="Arial,sans-serif" font-size="42" font-weight="700" text-anchor="middle">CETI</text>
+  <circle cx="42" cy="180" r="7" fill="#075b98"/>
+  <circle cx="318" cy="180" r="7" fill="#075b98"/>
+  <text fill="#075b98" font-family="Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="1"><textPath href="#topArc" startOffset="50%" text-anchor="middle">CENTRO ESTADUAL DE TEMPO INTEGRAL</textPath></text>
+  <text fill="#075b98" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="2"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">NONATO VALENTE</textPath></text>
+</svg>
