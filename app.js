@@ -405,4 +405,3 @@ if (isConfigured){
 } else {
 	startDemoMode();
 }
-

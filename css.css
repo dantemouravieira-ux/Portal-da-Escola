@@ -122,6 +122,23 @@ button:focus-visible, a:focus-visible, input:focus-visible{
 .school-nav a.active{ border-bottom-color: var(--accent-temp); }
 
 main{ display: grid; gap: 22px; }
+.page > header{ animation: pageReveal .6s ease both; }
+.page > .school-nav{ animation: pageReveal .6s ease .08s both; }
+.page > main > *{ animation: pageReveal .6s ease .16s both; }
+.welcome-grid > *{ animation: pageReveal .6s ease .24s both; }
+.welcome-grid > :nth-child(2){ animation-delay: .32s; }
+.class-grid > .class-card{ animation: pageReveal .5s ease both; }
+.class-grid > .class-card:nth-child(2){ animation-delay: .06s; }
+.class-grid > .class-card:nth-child(3){ animation-delay: .12s; }
+.class-grid > .class-card:nth-child(4){ animation-delay: .18s; }
+.class-grid > .class-card:nth-child(5){ animation-delay: .24s; }
+.class-grid > .class-card:nth-child(6){ animation-delay: .30s; }
+.class-grid > .class-card:nth-child(7){ animation-delay: .36s; }
+.class-grid > .class-card:nth-child(8){ animation-delay: .42s; }
+.class-grid > .class-card:nth-child(9){ animation-delay: .48s; }
+.gauges > .gauge-card{ animation: pageReveal .5s ease both; }
+.gauges > .gauge-card:nth-child(2){ animation-delay: .08s; }
+.gauges > .gauge-card:nth-child(3){ animation-delay: .16s; }
 .welcome-grid{ display: grid; grid-template-columns: 1.25fr .75fr; gap: 16px; }
 .now-panel, .lunch-status, .portal-section{
 	background: var(--bg-panel);
@@ -149,12 +166,35 @@ main{ display: grid; gap: 22px; }
 .portal-section > .section-heading{ margin-bottom: 20px; }
 .date-label{ color: var(--text-muted); font: 11px 'IBM Plex Mono', monospace; }
 .timeline{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.timeline-item{ border-top: 2px solid var(--border); padding-top: 12px; }
-.timeline-item.current{ border-color: var(--accent-temp); }
+.timeline-item{ border-top: 2px solid var(--border); padding-top: 12px; animation: timelineReveal .55s ease both; }
+.timeline-item:nth-child(2){ animation-delay: .08s; }
+.timeline-item:nth-child(3){ animation-delay: .16s; }
+.timeline-item:nth-child(4){ animation-delay: .24s; }
+.timeline-item:nth-child(5){ animation-delay: .32s; }
+.timeline-item:nth-child(6){ animation-delay: .40s; }
+.timeline-item:nth-child(7){ animation-delay: .48s; }
+.timeline-item:nth-child(8){ animation-delay: .56s; }
+.timeline-item.current{ border-color: var(--accent-temp); animation: timelineReveal .55s ease both, timelineCurrent 2.4s ease-in-out .7s infinite; }
 .timeline-item.done{ opacity: .55; }
 .time{ display: block; color: var(--text-muted); font: 11px 'IBM Plex Mono', monospace; margin-bottom: 10px; }
 .timeline-item strong{ display: block; font-size: 13px; }
 .timeline-item small{ display: block; color: var(--text-muted); font-size: 11px; margin-top: 5px; }
+
+@keyframes timelineReveal {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pageReveal {
+	from { opacity: 0; transform: translateY(14px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes timelineCurrent {
+	0%, 100% { box-shadow: 0 0 0 rgba(242,180,107,0); }
+	50% { box-shadow: 0 -3px 12px rgba(242,180,107,.18); }
+}
+
 .notice-list{ display: grid; gap: 10px; }
 .notice-list:empty{ display: none; }
 .notice{ display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--bg-panel-2); border-left: 3px solid var(--accent-humid); }
@@ -490,21 +530,28 @@ footer{
 }
 
 @media (max-width: 520px){
-	body{ padding: 16px 12px 36px; }
+	body{ padding: 16px 12px 36px; overflow-x: hidden; }
+	.page{ width: 100%; }
 	.school-logo{ width: 88px; height: 88px; margin-bottom: 10px; }
 	h1{ font-size: 25px; }
 	.gauges{ grid-template-columns: 1fr; }
-	header{ flex-direction: column; align-items: flex-start; }
+	header{ flex-direction: column; align-items: flex-start; margin-bottom: 24px; }
 	.header-right{ width: 100%; justify-content: space-between; }
+	.theme-toggle{ min-width: 44px; min-height: 44px; padding: 8px 11px; }
 	.welcome-grid, .class-grid{ grid-template-columns: 1fr; }
 	.admin-grid, .challenge-layout{ grid-template-columns: 1fr; }
-	.timeline{ grid-template-columns: repeat(2, 1fr); row-gap: 20px; }
-	.school-nav{ gap: 20px; margin-right: -12px; padding-right: 12px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+	.timeline{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; row-gap: 18px; }
+	.timeline-item{ min-height: 68px; padding-top: 10px; }
+	.school-nav{ gap: 20px; margin-right: -12px; padding-right: 12px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: x proximity; }
 	.school-nav::-webkit-scrollbar{ display: none; }
-	.school-nav a{ padding: 10px 0; }
+	.school-nav a{ display: inline-flex; align-items: center; min-height: 44px; padding: 8px 0; scroll-snap-align: start; }
 	.portal-section{ padding: 16px; }
 	.now-panel, .lunch-status{ padding: 20px; }
+	.now-panel h2, .lunch-status h2{ font-size: 22px; }
+	.countdown{ font-size: 32px; letter-spacing: .02em; }
 	.section-heading{ align-items: flex-start; flex-direction: column; gap: 8px; }
+	.section-heading h2{ font-size: 21px; }
+	.date-label{ align-self: flex-start; }
 	.notice-date{ display: none; }
 	.challenge-flow{ grid-template-columns: repeat(2, 1fr); }
 	.history-strip{ flex-wrap: wrap; }
@@ -532,4 +579,3 @@ footer{
 	0%, 100% { opacity: 1; }
 	50% { opacity: 0.4; }
 }
-

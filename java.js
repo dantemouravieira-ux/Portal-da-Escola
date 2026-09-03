@@ -134,17 +134,17 @@ function startCountdown(){
 	const timelineDate = document.getElementById('timelineDate');
 	const timelineItems = [...document.querySelectorAll('.timeline-item[data-start]')];
 	const periods = [
-		{ start: '06:50', end: '07:50', label: 'Bloco 1', detail: 'Período da manhã' },
-		{ start: '07:50', end: '08:50', label: 'Bloco 2', detail: 'Período da manhã' },
+		{ start: '06:50', end: '07:50', label: 'Aula 1', detail: 'Período da manhã' },
+		{ start: '07:50', end: '08:50', label: 'Aula 2', detail: 'Período da manhã' },
 		{ start: '08:50', end: '09:10', label: 'Intervalo', detail: 'Pausa' },
-		{ start: '09:10', end: '10:10', label: 'Bloco 3', detail: 'Período da manhã' },
-		{ start: '10:10', end: '11:10', label: 'Bloco 4', detail: 'Período da manhã' },
-		{ start: '11:10', end: '12:10', label: 'Bloco 5', detail: 'Período da manhã' },
+		{ start: '09:10', end: '10:10', label: 'Aula 3', detail: 'Período da manhã' },
+		{ start: '10:10', end: '11:10', label: 'Aula 4', detail: 'Período da manhã' },
+		{ start: '11:10', end: '12:10', label: 'Aula 5', detail: 'Período da manhã' },
 		{ start: '12:10', end: '12:50', label: 'Almoço', detail: 'Refeitório' },
-		{ start: '12:50', end: '13:50', label: 'Bloco 6', detail: 'Período da tarde' },
-		{ start: '13:50', end: '14:50', label: 'Bloco 7', detail: 'Período da tarde' },
+		{ start: '12:50', end: '13:50', label: 'Aula 6', detail: 'Período da tarde' },
+		{ start: '13:50', end: '14:50', label: 'Aula 7', detail: 'Período da tarde' },
 		{ start: '14:50', end: '15:10', label: 'Intervalo', detail: 'Pausa' },
-		{ start: '15:10', end: '16:10', label: 'Bloco 8', detail: 'Período da tarde' },
+		{ start: '15:10', end: '16:10', label: 'Aula 8', detail: 'Período da tarde' },
 	];
 	const toMinutes = (value) => { const [hours, minutes] = value.split(':').map(Number); return hours * 60 + minutes; };
 	const formatDate = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
@@ -174,7 +174,7 @@ function startCountdown(){
 			currentPeriod.textContent = nowMinutes < toMinutes(periods[0].start) ? 'Aulas começam em breve' : 'Atividades encerradas';
 			currentPeriodDetail.textContent = nowMinutes < toMinutes(periods[0].start) ? 'A programação começa às 06:50' : 'Até o próximo dia letivo';
 			countdown.textContent = '--:--:--';
-			nextPeriod.textContent = next ? `Próximo bloco: ${next.start}` : 'Próximo bloco: amanhã, 06:50';
+			nextPeriod.textContent = next ? `Próxima aula: ${next.start}` : 'Próxima aula: amanhã, 06:50';
 			return;
 		}
 		const end = new Date(now);
@@ -187,7 +187,7 @@ function startCountdown(){
 		currentPeriod.textContent = `${period.label} em andamento`;
 		currentPeriodDetail.textContent = period.detail;
 		countdown.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-		nextPeriod.textContent = `Próximo bloco: ${period.end}`;
+		nextPeriod.textContent = `Próxima aula: ${period.end}`;
 	}
 
 	updateCountdown();
@@ -584,4 +584,3 @@ if (isConfigured){
 } else {
 	startDemoMode();
 }
-
