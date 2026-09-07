@@ -1,14 +1,6 @@
-const firebaseConfig = {
-	apiKey: "AIzaSyDOv1n1TTC4OLb0zChkgwLMmDOaualD0i4",
-	authDomain: "climate-guard-a1b6e.firebaseapp.com",
-	databaseURL: "https://climate-guard-a1b6e-default-rtdb.firebaseio.com",
-	projectId: "climate-guard-a1b6e",
-	storageBucket: "climate-guard-a1b6e.firebasestorage.app",
-	messagingSenderId: "496904319832",
-	appId: "1:496904319832:web:be2be5a93535c20b012b2d",
-};
+import { db, subscribePortalData } from './firebase-data.js';
 
-const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
+const isDemoMode = new URLSearchParams(window.location.search).get('demo') === '1';
 
 // ---- Referências de UI ----
 const tempValueEl = document.getElementById('tempValue');
@@ -18,6 +10,7 @@ const umidSubEl = document.getElementById('umidSub');
 const ringTemp = document.getElementById('ringTemp');
 const ringUmid = document.getElementById('ringUmid');
 const alertBar = document.getElementById('alertaUmidade');
+const temperatureAlertBar = document.getElementById('alertaTemperatura');
 const statusIndicator = document.getElementById('statusIndicator');
 const statusText = document.getElementById('statusText');
 const lastUpdatedEl = document.getElementById('lastUpdated');
@@ -36,109 +29,267 @@ const SENSOR_OFFLINE_AFTER_MS = 2 * 60 * 1000;
 let lastSensorReadingDate = null;
 
 const UMID_ALERT_THRESHOLD = 30;
-let humidityAlertLimit = Number(localStorage.getItem('humidityAlertLimit')) || UMID_ALERT_THRESHOLD;
+let humidityAlertLimit = UMID_ALERT_THRESHOLD;
+let temperatureAlertLimit = 35;
 let externalWindSpeed = null;
 let externalWindDirection = null;
 
-function initializeAdministration(){
-	const settingsForm = document.getElementById('settingsForm');
-	const menuForm = document.getElementById('menuForm');
-	const classForm = document.getElementById('classForm');
-	const savedPoint = localStorage.getItem('monitorPoint') || 'Pátio central';
-	document.getElementById('humidityLimit').value = humidityAlertLimit;
-	document.getElementById('monitorPoint').value = savedPoint;
-	document.getElementById('pointLabel').textContent = savedPoint;
-
-	settingsForm.addEventListener('submit', (event) => {
-		event.preventDefault();
-		humidityAlertLimit = Number(document.getElementById('humidityLimit').value);
-		localStorage.setItem('humidityAlertLimit', humidityAlertLimit);
-		const point = document.getElementById('monitorPoint').value.trim() || 'Pátio central';
-		localStorage.setItem('monitorPoint', point);
-		document.getElementById('pointLabel').textContent = point;
-		document.getElementById('settingsFeedback').textContent = 'Configurações salvas.';
-	});
-
-	menuForm.addEventListener('submit', (event) => {
-		event.preventDefault();
-		document.getElementById('menuDisplayMain').textContent = document.getElementById('menuMain').value;
-		document.getElementById('menuDisplayDetails').textContent = `${document.getElementById('menuSide').value} · ${document.getElementById('menuTime').value}`;
-		document.getElementById('menuFeedback').textContent = 'Cardápio publicado no portal.';
-	});
-
-	classForm.addEventListener('submit', (event) => {
-		event.preventDefault();
-		const card = document.createElement('article');
-		card.className = 'class-card';
-		const year = document.createElement('span');
-		year.className = 'class-year';
-		year.textContent = 'nova turma';
-		const name = document.createElement('h3');
-		name.textContent = document.getElementById('className').value;
-		const details = document.createElement('p');
-		details.textContent = `${document.getElementById('classTeacher').value} · ${document.getElementById('classStudents').value} alunos`;
-		const link = document.createElement('a');
-		link.href = '#turmas';
-		link.textContent = 'Ver perfil →';
-		card.append(year, name, details, link);
-		document.getElementById('classGrid').append(card);
-		classForm.reset();
-		document.getElementById('classFeedback').textContent = 'Turma cadastrada.';
-	});
-}
-
-function updateMenuDisplay(){
-	const weeklyMenu = JSON.parse(localStorage.getItem('weeklyMenu') || 'null');
-	const legacyMenu = JSON.parse(localStorage.getItem('menu') || 'null');
-	const savedMenu = (weeklyMenu && weeklyMenu[new Date().getDay()]) || legacyMenu;
+function updateMenuDisplay(weeklyMenu = {}){
 	const menuMain = document.getElementById('menuDisplayMain');
 	const menuDetails = document.getElementById('menuDisplayDetails');
+	if (!menuMain || !menuDetails) return;
+	const savedMenu = weeklyMenu[new Date().getDay()];
 	if (!savedMenu || !savedMenu.main){
 		menuMain.textContent = 'Cardápio ainda não publicado';
 		menuDetails.textContent = 'Consulte a administração para saber o almoço de hoje';
+		renderSchoolTodaySummary();
 		return;
 	}
 	menuMain.textContent = savedMenu.main;
 	menuDetails.textContent = `${savedMenu.side} · ${savedMenu.time}`;
+	renderSchoolTodaySummary();
 }
 
-function loadSavedPortalData(){
-	updateMenuDisplay();
-	window.addEventListener('storage', (event) => {
-		if (event.key === 'weeklyMenu' || event.key === 'menu') updateMenuDisplay();
-	});
-	setInterval(updateMenuDisplay, 60 * 1000);
+function updateGreeting(){
+	const heading = document.getElementById('welcomeGreeting');
+	if (!heading) return;
+	const hour = new Date().getHours();
+	let greeting = 'Bom dia, comunidade';
+	if (hour >= 18 || hour < 5) {
+		greeting = 'Boa noite, comunidade';
+	} else if (hour >= 12) {
+		greeting = 'Boa tarde, comunidade';
+	}
+	heading.textContent = greeting;
+}
 
-	const savedClasses = JSON.parse(localStorage.getItem('classes') || '[]');
+function renderPortalClasses(savedClasses = []){
+	const classGrid = document.getElementById('classGrid');
+	if (!classGrid) return;
+	classGrid.querySelectorAll('[data-firestore-class]').forEach((card) => card.remove());
 	savedClasses.forEach((savedClass) => {
 		const card = document.createElement('article');
 		card.className = 'class-card';
 		const year = document.createElement('span');
 		year.className = 'class-year';
-		year.textContent = 'nova turma';
+		year.textContent = savedClass.year || 'nova turma';
 		const name = document.createElement('h3');
 		name.textContent = savedClass.name;
 		const details = document.createElement('p');
-		details.textContent = `${savedClass.teacher} · ${savedClass.students} alunos`;
+		const contact = savedClass.contact ? ` · ${savedClass.contact}` : '';
+		details.textContent = `${savedClass.teacher || 'Professor não informado'}${contact}${savedClass.students ? ` · ${savedClass.students} alunos` : ''}`;
+		const profileList = document.createElement('ul');
+		profileList.className = 'class-profile-list';
+		const profileItems = [
+			savedClass.teacher ? `Professor responsável: ${savedClass.teacher}` : null,
+			savedClass.contact ? `Contato: ${savedClass.contact}` : null,
+			savedClass.materials ? `Materiais: ${savedClass.materials}` : null,
+			savedClass.tasks ? `Tarefas: ${savedClass.tasks}` : null,
+			savedClass.observations ? `Observações: ${savedClass.observations}` : null,
+		].filter(Boolean);
+		profileItems.forEach((item) => {
+			const listItem = document.createElement('li');
+			listItem.textContent = item;
+			profileList.append(listItem);
+		});
 		const link = document.createElement('a');
 		link.href = '#turmas';
 		link.textContent = 'Ver perfil →';
-		card.append(year, name, details, link);
-		document.getElementById('classGrid').append(card);
+		card.dataset.firestoreClass = savedClass.id;
+		card.append(year, name, details, profileList, link);
+		classGrid.append(card);
 	});
+	renderSchoolTodaySummary();
+}
 
+function getSchoolTodaySnapshot() {
+	const schoolToday = {
+		schedule: '06:50 · 16:10',
+		scheduleDetail: 'A programação do dia',
+		currentClass: 'Aula 1',
+		currentClassDetail: 'Período da manhã',
+		urgent: 'Nenhum aviso urgente',
+		urgentMeta: 'Central de avisos',
+	};
+
+	const urgentEvents = document.querySelectorAll('#noticeList .notice.urgent, #noticeList .notice');
+	const firstUrgent = urgentEvents.length ? urgentEvents[0] : null;
+	if (firstUrgent) {
+		schoolToday.urgent = firstUrgent.querySelector('strong')?.textContent || 'Aviso importante';
+		schoolToday.urgentMeta = firstUrgent.querySelector('p')?.textContent || 'Central de avisos';
+	}
+
+	const currentPeriod = document.getElementById('currentPeriod');
+	const currentPeriodDetail = document.getElementById('currentPeriodDetail');
+	if (currentPeriod && currentPeriodDetail) {
+		schoolToday.currentClass = currentPeriod.textContent.trim() || 'Aula 1';
+		schoolToday.currentClassDetail = currentPeriodDetail.textContent.trim() || 'Período da manhã';
+	}
+
+	const todayDate = document.getElementById('timelineDate');
+	if (todayDate) {
+		schoolToday.scheduleDetail = todayDate.textContent.trim();
+	}
+	return schoolToday;
+}
+
+function renderSchoolTodaySummary() {
+	const summary = getSchoolTodaySnapshot();
+	const dateLabel = document.getElementById('todayDateLabel');
+	const todaySchedule = document.getElementById('todaySchedule');
+	const todayScheduleDetail = document.getElementById('todayScheduleDetail');
+	const todayCurrentClass = document.getElementById('todayCurrentClass');
+	const todayCurrentClassDetail = document.getElementById('todayCurrentClassDetail');
+	const todayUrgentNotice = document.getElementById('todayUrgentNotice');
+	const todayUrgentMeta = document.getElementById('todayUrgentMeta');
+	if (!dateLabel || !todaySchedule || !todayScheduleDetail || !todayCurrentClass || !todayCurrentClassDetail || !todayUrgentNotice || !todayUrgentMeta) return;
+	dateLabel.textContent = summary.scheduleDetail || 'Hoje';
+	todaySchedule.textContent = summary.schedule;
+	todayScheduleDetail.textContent = summary.scheduleDetail;
+	todayCurrentClass.textContent = summary.currentClass;
+	todayCurrentClassDetail.textContent = summary.currentClassDetail;
+	todayUrgentNotice.textContent = summary.urgent;
+	todayUrgentMeta.textContent = summary.urgentMeta;
+}
+
+function renderPortalEvents(savedEvents = []){
 	const noticeList = document.getElementById('noticeList');
-	const savedEvents = JSON.parse(localStorage.getItem('events') || '[]');
 	const noticesSection = document.getElementById('avisos');
-	if (savedEvents.length) noticesSection.hidden = false;
+	if (!noticeList || !noticesSection) return;
+	noticeList.replaceChildren();
+	noticesSection.hidden = savedEvents.length === 0;
 	savedEvents.forEach((event) => {
 		const notice = document.createElement('article');
 		notice.className = 'notice';
+		const title = String(event.title || '');
+		const details = String(event.details || '');
+		if (title.toLowerCase().includes('urgente') || details.toLowerCase().includes('urgente')) notice.classList.add('urgent');
 		notice.innerHTML = '<span class="notice-mark">i</span><div><strong></strong><p></p></div><span class="notice-date">Publicado</span>';
-		notice.querySelector('strong').textContent = event.title;
-		notice.querySelector('p').textContent = `${event.date} · ${event.details}`;
+		notice.querySelector('strong').textContent = title || 'Aviso';
+		notice.querySelector('p').textContent = `${event.date || 'Sem data'} · ${details || 'Sem detalhes'}`;
 		noticeList.append(notice);
 	});
+	renderSchoolTodaySummary();
+}
+
+function loadSavedPortalData(){
+	subscribePortalData({
+		onMenu: updateMenuDisplay,
+		onClasses: renderPortalClasses,
+		onEvents: renderPortalEvents,
+		onSettings: (settings) => {
+			const savedLimit = Number(settings.humidityAlertLimit);
+			humidityAlertLimit = Number.isFinite(savedLimit) ? savedLimit : UMID_ALERT_THRESHOLD;
+			const savedTemperatureLimit = Number(settings.temperatureLimit);
+			temperatureAlertLimit = Number.isFinite(savedTemperatureLimit) ? savedTemperatureLimit : 35;
+			const pointLabel = document.getElementById('pointLabel');
+			if (pointLabel) pointLabel.textContent = settings.monitorPoint || 'Pátio central';
+		},
+	});
+}
+
+function addDays(date, days) {
+	const next = new Date(date);
+	next.setDate(next.getDate() + days);
+	return next;
+}
+
+function getEasterSunday(year) {
+	const a = year % 19;
+	const b = Math.floor(year / 100);
+	const c = year % 100;
+	const d = Math.floor(b / 4);
+	const e = b % 4;
+	const f = Math.floor((b + 8) / 25);
+	const g = Math.floor((b - f + 1) / 3);
+	const h = (19 * a + b - d - g + 15) % 30;
+	const i = Math.floor(c / 4);
+	const k = c % 4;
+	const l = (32 + 2 * e + 2 * i - h - k) % 7;
+	const m = Math.floor((a + 11 * h + 22 * l) / 451);
+	const month = Math.floor((h + l - 7 * m + 114) / 31);
+	const day = ((h + l - 7 * m + 114) % 31) + 1;
+	return new Date(year, month - 1, day);
+}
+
+const HOLIDAY_DEFINITIONS = [
+	{ month: 1, day: 1, name: 'Ano Novo' },
+	{ month: 4, day: 21, name: 'Feriado de Tiradentes' },
+	{ month: 5, day: 1, name: 'Dia do Trabalhador' },
+	{ month: 9, day: 7, name: 'Feriado da Independência' },
+	{ month: 10, day: 12, name: 'Nossa Senhora Aparecida' },
+	{ month: 11, day: 2, name: 'Finados' },
+	{ month: 11, day: 15, name: 'Proclamação da República' },
+	{ month: 11, day: 20, name: 'Consc. Negra' },
+	{ month: 12, day: 25, name: 'Natal' },
+];
+
+function toISODateKey(date) {
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getHolidayName(date) {
+	const year = date.getFullYear();
+	const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+	const localKey = toISODateKey(normalized);
+
+	const fixedHoliday = HOLIDAY_DEFINITIONS.find((holiday) => {
+		return holiday.month === normalized.getMonth() + 1 && holiday.day === normalized.getDate();
+	});
+	if (fixedHoliday) return fixedHoliday.name;
+
+	const easter = getEasterSunday(year);
+	const movableHolidays = new Map([
+		[addDays(easter, -48).toISOString().slice(0, 10), 'Carnaval'],
+		[addDays(easter, -47).toISOString().slice(0, 10), 'Carnaval'],
+		[addDays(easter, -46).toISOString().slice(0, 10), 'Quarta-feira de Cinzas'],
+		[addDays(easter, -2).toISOString().slice(0, 10), 'Sexta-feira Santa'],
+		[addDays(easter, 39).toISOString().slice(0, 10), 'Ascensão'],
+		[addDays(easter, 60).toISOString().slice(0, 10), 'Corpus Christi'],
+		[new Date(year, 11, 24).toISOString().slice(0, 10), 'Véspera de Natal'],
+	]);
+	const isoKey = normalized.toISOString().slice(0, 10);
+	if (movableHolidays.has(isoKey)) return movableHolidays.get(isoKey);
+	if (localKey === toISODateKey(new Date(year, 11, 24))) return 'Véspera de Natal';
+	return 'Feriado nacional';
+}
+
+function getBrazilianHolidays(year) {
+	const holidays = new Set();
+
+	HOLIDAY_DEFINITIONS.forEach(({ month, day }) => {
+		holidays.add(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+	});
+
+	const easter = getEasterSunday(year);
+	const movableDates = [
+		addDays(easter, -48),
+		addDays(easter, -47),
+		addDays(easter, -46),
+		addDays(easter, -2),
+		addDays(easter, 39),
+		addDays(easter, 60),
+		new Date(year, 11, 24),
+	];
+	movableDates.forEach((date) => holidays.add(toISODateKey(date)));
+	return holidays;
+}
+
+function isHoliday(date) {
+	const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+	const localKey = toISODateKey(normalized);
+	const utcKey = normalized.toISOString().slice(0, 10);
+	return getBrazilianHolidays(date.getFullYear()).has(localKey) || getBrazilianHolidays(date.getFullYear()).has(utcKey);
+}
+
+function getNextSchoolDay(date) {
+	const next = new Date(date);
+	for (let i = 0; i < 365; i += 1) {
+		next.setDate(date.getDate() + i + 1);
+		const day = next.getDay();
+		if (day !== 0 && day !== 6 && !isHoliday(next)) return next;
+	}
+	return null;
 }
 
 function startCountdown(){
@@ -149,6 +300,7 @@ function startCountdown(){
 	const timelineDate = document.getElementById('timelineDate');
 	const timeline = document.getElementById('timeline');
 	const timelineNext = document.getElementById('timelineNext');
+	if (!countdown || !currentPeriod || !currentPeriodDetail || !nextPeriod || !timelineDate || !timeline) return;
 	const periods = [
 		{ start: '06:50', end: '07:50', label: 'Aula 1', detail: 'Período da manhã' },
 		{ start: '07:50', end: '08:50', label: 'Aula 2', detail: 'Período da manhã' },
@@ -202,6 +354,29 @@ function startCountdown(){
 	function updateCountdown(){
 		const now = new Date();
 		const nowMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+		const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+		const isOffDay = isWeekend || isHoliday(now);
+		if (isOffDay){
+			updateTimeline(now, nowMinutes);
+			const nextSchoolDay = getNextSchoolDay(now);
+			const holidayLabel = isHoliday(now)
+				? getHolidayName(now)
+				: 'Final de semana';
+			currentPeriod.textContent = `Sem aulas · ${holidayLabel}`;
+			currentPeriodDetail.textContent = '';
+			countdown.textContent = '--:--:--';
+			if (nextSchoolDay) {
+				const formatted = new Intl.DateTimeFormat('pt-BR', {
+					weekday: 'long',
+					day: '2-digit',
+					month: 'long',
+				}).format(nextSchoolDay);
+				nextPeriod.textContent = `Próxima aula: ${formatted}, 06:50`;
+			} else {
+				nextPeriod.textContent = 'Próxima aula: próxima semana';
+			}
+			return;
+		}
 		updateTimeline(now, nowMinutes);
 		const period = periods.find((item) => nowMinutes >= toMinutes(item.start) && nowMinutes < toMinutes(item.end));
 		const next = periods.find((item) => toMinutes(item.start) > nowMinutes);
@@ -231,11 +406,13 @@ function startCountdown(){
 
 // ========== TEMA CLARO/ESCURO ==========
 function initTheme(){
+	if (!themeToggle) return;
 	const saved = localStorage.getItem('theme') || 'dark';
 	applyTheme(saved);
 }
 
 function applyTheme(theme){
+	if (!themeToggle) return;
 	if (theme === 'light'){
 		document.documentElement.setAttribute('data-theme', 'light');
 		themeToggle.textContent = '☀️';
@@ -249,10 +426,12 @@ function applyTheme(theme){
 	}
 }
 
-themeToggle.addEventListener('click', () => {
-	const current = localStorage.getItem('theme') || 'dark';
-	applyTheme(current === 'dark' ? 'light' : 'dark');
-});
+if (themeToggle) {
+	themeToggle.addEventListener('click', () => {
+		const current = localStorage.getItem('theme') || 'dark';
+		applyTheme(current === 'dark' ? 'light' : 'dark');
+	});
+}
 
 document.querySelectorAll('.school-nav a').forEach((link) => {
 	link.addEventListener('click', () => {
@@ -300,12 +479,14 @@ function getTemperatureColor(temp){
 }
 
 function setRing(el, value, min, max){
+	if (!el) return;
 	const pct = Math.min(1, Math.max(0, (value - min) / (max - min)));
 	const offset = RING_CIRCUMFERENCE * (1 - pct);
 	el.style.strokeDashoffset = offset;
 }
 
 function updateTemperatureRingColor(temp){
+	if (!ringTemp) return;
 	const color = getTemperatureColor(temp);
 	ringTemp.style.stroke = color;
 }
@@ -419,6 +600,7 @@ function drawFallbackChart(labels, temps, umids){
 	canvas.width = width * scale;
 	canvas.height = height * scale;
 	const context = canvas.getContext('2d');
+	context.setTransform(1, 0, 0, 1, 0, 0);
 	context.scale(scale, scale);
 	context.clearRect(0, 0, width, height);
 	const values = [...temps, ...umids];
@@ -426,24 +608,28 @@ function drawFallbackChart(labels, temps, umids){
 	const max = Math.max(100, ...values);
 	const x = (index) => 30 + (index * (width - 45)) / Math.max(1, labels.length - 1);
 	const y = (value) => height - 24 - ((value - min) * (height - 45)) / (max - min);
+	const tempColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-temp').trim() || '#d9473f';
+	const humidityColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-humid').trim() || '#378f83';
+	const baseGrid = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#3b5049';
+	const labelColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#a8b8b1';
 
-	context.strokeStyle = '#3b5049';
+	context.strokeStyle = baseGrid;
 	context.lineWidth = 1;
 	[0, 25, 50, 75, 100].forEach((value) => {
 		context.beginPath(); context.moveTo(30, y(value)); context.lineTo(width, y(value)); context.stroke();
-		context.fillStyle = '#a9bdcc'; context.font = '11px IBM Plex Mono'; context.fillText(value, 3, y(value) + 4);
+		context.fillStyle = labelColor; context.font = '11px IBM Plex Mono'; context.fillText(value, 3, y(value) + 4);
 	});
-	[[temps, '#f5223d'], [umids, '#1677ff']].forEach(([series, color]) => {
+	[[temps, tempColor], [umids, humidityColor]].forEach(([series, color]) => {
 		context.beginPath();
 		series.forEach((value, index) => index === 0 ? context.moveTo(x(index), y(value)) : context.lineTo(x(index), y(value)));
 		context.lineTo(x(series.length - 1), height - 24); context.lineTo(x(0), height - 24); context.closePath();
-		context.fillStyle = color === '#f5223d' ? 'rgba(245,34,61,.16)' : 'rgba(22,119,255,.16)'; context.fill();
+		context.fillStyle = color === tempColor ? 'rgba(217,138,61,.14)' : 'rgba(55,143,131,.14)'; context.fill();
 		context.beginPath(); context.strokeStyle = color; context.lineWidth = 3;
 		series.forEach((value, index) => index === 0 ? context.moveTo(x(index), y(value)) : context.lineTo(x(index), y(value)));
 		context.stroke();
 		series.forEach((value, index) => { context.beginPath(); context.fillStyle = color; context.arc(x(index), y(value), 4.5, 0, Math.PI * 2); context.fill(); });
 	});
-	context.fillStyle = '#a9bdcc'; context.font = '11px IBM Plex Mono';
+	context.fillStyle = labelColor; context.font = '11px IBM Plex Mono';
 	labels.forEach((label, index) => { if (index === 0 || index === labels.length - 1 || index % 2 === 0) context.fillText(label, x(index) - 20, height - 5); });
 	canvas.onmousemove = (event) => {
 		const index = Math.max(0, Math.min(labels.length - 1, Math.round(((event.offsetX - 30) * (labels.length - 1)) / Math.max(1, width - 45))));
@@ -459,7 +645,10 @@ function drawFallbackChart(labels, temps, umids){
 function ensureChart(){
 	if (chart) return chart;
 	if (typeof Chart === 'undefined') return null;
-	document.querySelector('.chart-legend').style.display = 'none';
+
+	const tempColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-temp').trim() || '#d9473f';
+	const humidityColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-humid').trim() || '#378f83';
+
 	chart = new Chart(ctx, {
 		type: 'line',
 		data: {
@@ -469,61 +658,114 @@ function ensureChart(){
 					label: 'Temperatura °C',
 					data: [],
 					yAxisID: 'temperature',
-					borderColor: '#f5223d',
-					backgroundColor: 'rgba(245,34,61,0.18)',
-					fill: true,
-					tension: 0.3,
-					pointRadius: 5,
-					pointHoverRadius: 7,
-					pointBackgroundColor: '#f5223d',
-					pointBorderColor: '#ff9aa8',
+					borderColor: tempColor,
+					backgroundColor: 'rgba(217,71,63,0.15)',
+					fill: false,
+					tension: 0.18,
+					cubicInterpolationMode: 'monotone',
 					borderWidth: 3,
+					pointRadius: 3,
+					pointHoverRadius: 5,
+					pointBackgroundColor: '#f4d4b1',
+					pointBorderColor: tempColor,
+					pointBorderWidth: 2,
+					relation: 'temperature'
 				},
 				{
 					label: 'Umidade %',
 					data: [],
 					yAxisID: 'humidity',
-					borderColor: '#1677ff',
-					backgroundColor: 'rgba(22,119,255,0.18)',
-					fill: true,
-					tension: 0.3,
-					pointRadius: 5,
-					pointHoverRadius: 7,
-					pointBackgroundColor: '#1677ff',
-					pointBorderColor: '#8ab8ff',
+					borderColor: humidityColor,
+					backgroundColor: 'rgba(55,143,131,0.12)',
+					fill: false,
+					tension: 0.18,
+					cubicInterpolationMode: 'monotone',
 					borderWidth: 3,
+					pointRadius: 3,
+					pointHoverRadius: 5,
+					pointBackgroundColor: '#d7efe7',
+					pointBorderColor: humidityColor,
+					pointBorderWidth: 2,
+					relation: 'humidity'
 				}
 			]
 		},
 		options: {
 			responsive: true,
 			maintainAspectRatio: false,
+			animation: { duration: 450, easing: 'easeOutCubic' },
 			interaction: { mode: 'index', intersect: false },
 			plugins: {
+				legend: { display: false },
 				tooltip: {
-						padding: 10,
-						bodyFont: { family: 'Inter', size: 13 },
-						titleFont: { family: 'IBM Plex Mono', size: 12 },
+					backgroundColor: 'rgba(10, 20, 32, 0.96)',
+					borderColor: 'rgba(217,71,63,0.8)',
+					borderWidth: 1,
+					padding: 10,
+					titleColor: '#f6f3eb',
+					bodyColor: '#f6f3eb',
+					titleFont: { family: 'IBM Plex Mono', size: 11 },
+					bodyFont: { family: 'Inter', size: 12, weight: '600' },
+					displayColors: true,
 					callbacks: {
 						title: (items) => items[0]?.label || '',
 						label: (context) => {
 							const value = Number(context.raw);
 							return context.dataset.label.startsWith('Temperatura') ? `Temperatura: ${value.toFixed(1)} °C` : `Umidade: ${value.toFixed(0)}%`;
-						},
+						}
 					}
-				},
-				legend: {
-					display: false,
-					position: 'top',
-					align: 'start',
-					labels: { color: '#dce8f2', padding: 18, usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 13, weight: '600' } }
 				}
 			},
-				scales: {
-					x: { ticks: { color: '#a9bdcc', maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 11 } }, grid: { color: 'rgba(132,166,190,.16)' } },
-					temperature: { type: 'linear', position: 'left', min: 0, max: 45, ticks: { color: '#ff9ca2', precision: 0, maxTicksLimit: 6, callback: (value) => `${value}°` }, grid: { color: 'rgba(132,166,190,.16)' } },
-					humidity: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#8bcfff', precision: 0, maxTicksLimit: 6, callback: (value) => `${value}%` }, grid: { drawOnChartArea: false } }
+			scales: {
+				x: {
+					grid: {
+						color: 'rgba(138, 171, 196, 0.12)',
+						tickLength: 0,
+						drawBorder: false
+					},
+					border: { display: false },
+					ticks: {
+						color: '#a9bfd6',
+						maxRotation: 0,
+						autoSkip: true,
+						maxTicksLimit: 6,
+						font: { family: 'IBM Plex Mono', size: 11 }
+					}
+				},
+				temperature: {
+					type: 'linear',
+					position: 'left',
+					grace: '5%',
+					grid: {
+						color: 'rgba(138, 171, 196, 0.12)',
+						drawBorder: false,
+						tickLength: 0
+					},
+					border: { display: false },
+					ticks: {
+						color: '#d9473f',
+						precision: 0,
+						maxTicksLimit: 6,
+						callback: (value) => `${value.toFixed(0)}°`
+					},
+					niceMin: true,
+					niceMax: true
+				},
+				humidity: {
+					type: 'linear',
+					position: 'right',
+					min: 0,
+					max: 100,
+					grid: { drawOnChartArea: false },
+					border: { display: false },
+					ticks: {
+						color: '#9bd8c8',
+						precision: 0,
+						maxTicksLimit: 6,
+						callback: (value) => `${value.toFixed(0)}%`
+					}
 				}
+			}
 		}
 	});
 	return chart;
@@ -536,6 +778,9 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 	const wind = sensorWind ?? externalWindSpeed;
 
 	if (typeof t !== 'number' || Number.isNaN(t) || typeof u !== 'number' || Number.isNaN(u)){
+		tempReading.classList.remove('is-loading');
+		umidReading.classList.remove('is-loading');
+		windReading.classList.remove('is-loading');
 		tempSubEl.textContent = 'leitura inválida do sensor';
 		umidSubEl.textContent = 'leitura inválida do sensor';
 		return;
@@ -558,6 +803,7 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 	updateTemperatureRingColor(t);
 
 	alertBar.classList.toggle('visivel', u < humidityAlertLimit);
+	temperatureAlertBar?.classList.toggle('visivel', t >= temperatureAlertLimit);
 
 	const c = ensureChart();
 	if (c){
@@ -581,7 +827,7 @@ function setStatus(online, label){
 }
 
 function startDemoMode(){
-	setStatus(false, 'Offline');
+	setStatus(false, 'modo demonstração');
 
 	const labels = [];
 	const temps = [];
@@ -608,12 +854,9 @@ function startDemoMode(){
 async function startFirebaseMode(){
 	setStatus(false, 'Offline');
 	try{
-		const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-		const { getFirestore, collection, query, orderBy, limit, onSnapshot } =
+		const { collection, query, orderBy, limit, onSnapshot } =
 			await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
 
-		const app = initializeApp(firebaseConfig);
-		const db = getFirestore(app);
 		const q = query(collection(db, "leituras"), orderBy("timestamp", "desc"), limit(10));
 
 		onSnapshot(q, (snapshot) => {
@@ -639,6 +882,8 @@ async function startFirebaseMode(){
 }
 
 initTheme();
+updateGreeting();
+setInterval(updateGreeting, 60 * 1000);
 startCountdown();
 loadSavedPortalData();
 fetchExternalWind();
@@ -649,7 +894,7 @@ tempReading.classList.add('is-loading');
 umidReading.classList.add('is-loading');
 windReading.classList.add('is-loading');
 
-if (isConfigured){
+if (!isDemoMode){
 	startFirebaseMode();
 	setInterval(() => {
 		if (lastSensorReadingDate && Date.now() - lastSensorReadingDate.getTime() > SENSOR_OFFLINE_AFTER_MS){

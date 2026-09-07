@@ -19,7 +19,7 @@
     </div>
     <div class="header-right">
       <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro" aria-pressed="false">🌙</button>
-      <span class="status-pill">gestor conectado</span>
+      <span class="status-pill" id="connectionStatus">acesso restrito</span>
       <button class="remove-event" id="logoutButton" type="button" hidden>Sair</button>
     </div>
   </header>
@@ -56,8 +56,13 @@
         <form class="admin-form" id="classForm">
           <h3>Cadastro de turmas</h3>
           <label>Nome da turma <input id="className" type="text" placeholder="Ex.: 8º ano — manhã" required></label>
+          <label>Nível de ensino <select id="classYear"><option value="Ensino fundamental">Ensino fundamental</option><option value="Ensino médio">Ensino médio</option></select></label>
           <label>Professor(a) <input id="classTeacher" type="text" placeholder="Nome do responsável" required></label>
+          <label>E-mail ou contato <input id="classContact" type="text" placeholder="Ex.: professor@escola.com.br"></label>
           <label>Alunos <input id="classStudents" type="number" min="1" placeholder="Quantidade" required></label>
+          <label>Materiais da disciplina <textarea id="classMaterials" rows="3" placeholder="Lista de materiais, livros ou links"></textarea></label>
+          <label>Tarefas importantes <textarea id="classTasks" rows="3" placeholder="Entrega de trabalho, prova ou tarefa"></textarea></label>
+          <label>Observações da semana <textarea id="classObservations" rows="3" placeholder="Orientações para a turma"></textarea></label>
           <button class="action-button" type="submit">Cadastrar turma</button>
           <small class="form-feedback" id="classFeedback" role="status"></small>
         </form>
@@ -69,10 +74,12 @@
           <button class="action-button" type="submit">Publicar aviso</button>
           <small class="form-feedback" id="eventFeedback" role="status"></small>
         </form>
+
         <div class="admin-form" id="eventListPanel">
           <h3>Avisos publicados</h3>
           <div class="admin-event-list" id="adminEventList"></div>
         </div>
+
         <div class="admin-form permissions">
           <h3>Configuração de alertas</h3>
           <label class="switch-row">Alertas por WhatsApp <input id="whatsappPermission" type="checkbox" checked><span class="switch"></span></label>

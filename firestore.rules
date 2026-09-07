@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'dantemouravieira@gmail.com';
+    }
+
+    match /avisos/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /turmas/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /cardapio/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /configuracoes/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /leituras/{document} {
+      allow read: if true;
+      allow create: if (
+        request.resource.data.deviceKey == 'esp32-climate-guard' &&
+        request.resource.data.keys().hasOnly(['temperatura', 'umidade', 'timestamp', 'deviceKey']) &&
+        request.resource.data.temperatura is number &&
+        request.resource.data.temperatura >= -20 &&
+        request.resource.data.temperatura <= 60 &&
+        request.resource.data.umidade is number &&
+        request.resource.data.umidade >= 0 &&
+        request.resource.data.umidade <= 100 &&
+        request.resource.data.timestamp is int &&
+        request.resource.data.deviceKey is string
+      );
+      allow update, delete: if isAdmin();
+    }
+  }
+}

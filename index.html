@@ -7,7 +7,6 @@
 <title>Portal da Escola</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231b1f2a'/><circle cx='12' cy='12' r='6' fill='none' stroke='%23d98a3d' stroke-width='2'/></svg>">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css.css">
@@ -17,10 +16,12 @@
 <div class="page">
 
   <header>
-    <div>
+    <div class="brand-block">
       <img class="school-logo" src="logo-ceti.svg" alt="CETI Nonato Valente">
-      <span class="eyebrow">Portal da escola</span>
-      <h1>Bom dia, comunidade</h1>
+      <div class="hero-meta">
+        <span class="eyebrow">Portal da escola</span>
+        <h1 id="welcomeGreeting">Bom dia, comunidade</h1>
+      </div>
     </div>
     <div class="header-right">
       <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">🌙</button>
@@ -37,7 +38,6 @@
     <a href="#almoco">Almoço</a>
     <a href="#avisos">Avisos</a>
     <a href="#turmas">Turmas</a>
-    <a href="horario-ds.html" target="_blank" rel="noopener">Horário DS ↗</a>
     <a href="admin.html">Administração</a>
   </nav>
 
@@ -62,6 +62,27 @@
     <section class="portal-section" id="aulas">
       <div class="section-heading"><div><span class="eyebrow">Aulas</span><h2>Linha do tempo do dia</h2></div><div class="timeline-tools"><span class="date-label" id="timelineDate">Terça, 02 de setembro</span><button class="timeline-next" id="timelineNext" type="button" aria-label="Avançar para a próxima aula" title="Próxima aula">›</button></div></div>
       <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="portal-section school-today" aria-labelledby="schoolTodayTitle">
+      <div class="section-heading"><div><span class="eyebrow">Resumo do dia</span><h2 id="schoolTodayTitle">Na escola hoje</h2></div><span class="date-label" id="todayDateLabel">Hoje</span></div>
+      <div class="school-today-grid">
+        <div class="today-card">
+          <span class="today-label">Horário</span>
+          <strong id="todaySchedule">06:50 · 16:10</strong>
+          <small id="todayScheduleDetail">A programação do dia</small>
+        </div>
+        <div class="today-card">
+          <span class="today-label">Aula em andamento</span>
+          <strong id="todayCurrentClass">Aula 1</strong>
+          <small id="todayCurrentClassDetail">Período da manhã</small>
+        </div>
+        <div class="today-card urgent">
+          <span class="today-label">Avisos urgentes</span>
+          <strong id="todayUrgentNotice">Nenhum aviso urgente</strong>
+          <small id="todayUrgentMeta">Central de avisos</small>
+        </div>
+      </div>
     </section>
 
     <section class="portal-section" id="avisos" hidden>
@@ -130,6 +151,10 @@
     Atenção: Umidade Crítica! Risco à saúde.
   </div>
 
+  <div id="alertaTemperatura" class="alerta-umidade" role="alert" aria-live="assertive">
+    Atenção: temperatura acima do limite configurado.
+  </div>
+
   <section class="panel">
     <div class="chart-heading"><h2>Histórico recente</h2><span class="live-badge"><i></i> ao vivo</span></div>
     <div class="chart-legend" aria-label="Legenda do gráfico"><span class="temperature-key"><i></i>Temperatura °C</span><span class="humidity-key"><i></i>Umidade %</span></div>
@@ -153,7 +178,6 @@
 </div>
 
 <script type="module" src="java.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </body>
 </html>
