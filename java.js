@@ -623,7 +623,7 @@ function drawFallbackChart(labels, temps, umids){
 		context.beginPath();
 		series.forEach((value, index) => index === 0 ? context.moveTo(x(index), y(value)) : context.lineTo(x(index), y(value)));
 		context.lineTo(x(series.length - 1), height - 24); context.lineTo(x(0), height - 24); context.closePath();
-		context.fillStyle = color === tempColor ? 'rgba(217,138,61,.14)' : 'rgba(55,143,131,.14)'; context.fill();
+		context.fillStyle = color === tempColor ? 'rgba(217,71,63,.14)' : 'rgba(63,118,191,.14)'; context.fill();
 		context.beginPath(); context.strokeStyle = color; context.lineWidth = 3;
 		series.forEach((value, index) => index === 0 ? context.moveTo(x(index), y(value)) : context.lineTo(x(index), y(value)));
 		context.stroke();
