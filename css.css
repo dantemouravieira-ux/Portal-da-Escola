@@ -76,6 +76,38 @@
 	color: var(--text);
 }
 
+[data-theme="light"] .admin-page header,
+[data-theme="light"] .admin-page .portal-section,
+[data-theme="light"] .admin-page .admin-form{
+	background: var(--bg-panel);
+	border-color: var(--border);
+	color: var(--text);
+}
+
+[data-theme="light"] .admin-page header{
+	background: linear-gradient(135deg, #ffffff, #f3f6fa);
+}
+
+[data-theme="light"] .admin-page .admin-form input,
+[data-theme="light"] .admin-page .admin-form select,
+[data-theme="light"] .admin-page .admin-form textarea,
+[data-theme="light"] .admin-page .admin-login input,
+[data-theme="light"] .admin-page .menu-day,
+[data-theme="light"] .admin-page .admin-event-item{
+	background: #ffffff;
+	border-color: var(--border);
+	color: var(--text);
+}
+
+[data-theme="light"] .admin-page .action-button{
+	color: #ffffff;
+	background: var(--accent-humid);
+}
+
+[data-theme="light"] .admin-page .action-button:hover{
+	background: var(--accent-ink);
+}
+
 *{ box-sizing: border-box; }
 html{ scroll-behavior: smooth; }
 

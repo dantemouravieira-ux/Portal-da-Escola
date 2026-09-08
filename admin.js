@@ -41,7 +41,8 @@ function showLoginError(message) {
 
 function applyTheme(theme) {
 	const isLight = theme === 'light';
-	document.documentElement.toggleAttribute('data-theme', isLight);
+	if (isLight) document.documentElement.setAttribute('data-theme', 'light');
+	else document.documentElement.removeAttribute('data-theme');
 	themeToggle.textContent = isLight ? '☀️' : '🌙';
 	themeToggle.setAttribute('aria-pressed', String(isLight));
 	localStorage.setItem('theme', isLight ? 'light' : 'dark');
