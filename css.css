@@ -692,6 +692,26 @@ main{ display: grid; gap: 22px; }
 .hot-city-temp{ display: block; margin-top: 1px; color: var(--accent-temp); font: 10px 'IBM Plex Mono', monospace; }
 .map-location-marker{ width: 16px; height: 16px; border: 3px solid #fff; border-radius: 50%; background: var(--accent-humid); box-shadow: 0 0 0 5px rgba(55,143,131,.25); }
 
+.credits-panel{
+	margin-top: 18px;
+	padding: 22px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--bg-panel);
+	box-shadow: 0 14px 30px rgba(0,0,0,.06);
+}
+.credits-panel .section-heading{ margin-bottom: 16px; }
+.credits-panel h2{ margin: 0; font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; }
+.credits-intro{ margin: 8px 0 20px; color: var(--text-muted); font-size: 13px; }
+.credits-grid{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.credit-item{ display: grid; gap: 5px; padding: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel-2); }
+.credit-emoji{ font-size: 24px; line-height: 1; }
+.credit-item strong{ color: var(--text); font-size: 13px; }
+.credit-item span{ color: var(--text-muted); font: 10px 'IBM Plex Mono', monospace; }
+.credits-link{ color: var(--accent-humid); text-decoration: none; }
+.credits-link:hover{ color: var(--accent-brand); }
+.credits-page-panel{ max-width: 900px; margin: 0 auto; }
+
 footer{
 	margin-top: 20px;
 	display: flex;
@@ -779,6 +799,8 @@ footer{
 	.school-nav::-webkit-scrollbar{ display: none; }
 	.school-nav a{ display: inline-flex; align-items: center; min-height: 40px; padding: 8px 12px; scroll-snap-align: start; }
 	.portal-section{ padding: 16px; border-radius: 18px; }
+	.credits-panel{ padding: 16px; border-radius: 18px; }
+	.credits-grid{ grid-template-columns: 1fr; }
 	.now-panel, .lunch-status{ padding: 20px; border-radius: 18px; }
 	.now-panel h2, .lunch-status h2{ font-size: 22px; }
 	.now-class, .muted, .meter-label{ font-size: 14px; }
