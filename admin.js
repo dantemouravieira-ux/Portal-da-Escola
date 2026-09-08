@@ -11,6 +11,16 @@ const ADMIN_EMAIL = 'dantemouravieira@gmail.com';
 let unsubscribePortalData = null;
 let portalData = { menu: {} };
 
+function hidePageLoader(){
+	const loader = document.getElementById('pageLoader');
+	if (!loader) return;
+	loader.classList.add('is-hidden');
+	setTimeout(() => loader.remove(), 450);
+}
+
+window.addEventListener('load', () => setTimeout(hidePageLoader, 1200), { once: true });
+setTimeout(hidePageLoader, 5000);
+
 function setAdminAccess(isAuthenticated) {
 	adminLogin.hidden = isAuthenticated;
 	adminContent.hidden = !isAuthenticated;
@@ -83,8 +93,8 @@ function renderSettings(settings) {
 	document.getElementById('pointLabel').textContent = settings.monitorPoint || 'Pátio central';
 }
 
-themeToggle.addEventListener('click', () => applyTheme((localStorage.getItem('theme') || 'dark') === 'dark' ? 'light' : 'dark'));
-applyTheme(localStorage.getItem('theme') || 'dark');
+themeToggle.addEventListener('click', () => applyTheme((localStorage.getItem('theme') || 'light') === 'dark' ? 'light' : 'dark'));
+applyTheme(localStorage.getItem('theme') || 'light');
 
 loginForm.addEventListener('submit', async (event) => {
 	event.preventDefault();

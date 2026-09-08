@@ -152,7 +152,7 @@ function startCountdown(){
 
 // ========== TEMA CLARO/ESCURO ==========
 function initTheme(){
-	const saved = localStorage.getItem('theme') || 'dark';
+	const saved = localStorage.getItem('theme') || 'light';
 	applyTheme(saved);
 }
 
@@ -171,7 +171,7 @@ function applyTheme(theme){
 }
 
 themeToggle.addEventListener('click', () => {
-	const current = localStorage.getItem('theme') || 'dark';
+	const current = localStorage.getItem('theme') || 'light';
 	applyTheme(current === 'dark' ? 'light' : 'dark');
 });
 

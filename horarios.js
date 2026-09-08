@@ -128,9 +128,9 @@ const body = document.getElementById('scheduleBody');
 document.title = `Horário · ${schedule.name}`;
 document.getElementById('scheduleClassType').textContent = schedule.name;
 document.getElementById('scheduleSchool').textContent = schedule.area;
-document.getElementById('scheduleTitle').textContent = 'Grade semanal';
+document.getElementById('scheduleTitle').textContent = 'Horário semanal';
 document.getElementById('scheduleTeacher').textContent = schedule.teacher ? `Professor responsável: ${schedule.teacher}` : '';
-document.getElementById('scheduleCaption').textContent = `Grade semanal da turma ${schedule.name}`;
+document.getElementById('scheduleCaption').textContent = `Horário semanal da turma ${schedule.name}`;
 
 schedule.rows.forEach((row) => {
 	const tr = document.createElement('tr');

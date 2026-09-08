@@ -22,6 +22,16 @@ const windSubEl = document.getElementById('windSub');
 const windReading = document.getElementById('windReading');
 const windIconEl = document.querySelector('.wind-icon');
 
+function hidePageLoader(){
+	const loader = document.getElementById('pageLoader');
+	if (!loader) return;
+	loader.classList.add('is-hidden');
+	setTimeout(() => loader.remove(), 450);
+}
+
+window.addEventListener('load', () => setTimeout(hidePageLoader, 1200), { once: true });
+setTimeout(hidePageLoader, 5000);
+
 const RING_CIRCUMFERENCE = 314;
 const TEMP_MIN = 0, TEMP_MAX = 45;
 const UMID_MIN = 0, UMID_MAX = 100;
@@ -401,13 +411,15 @@ function startCountdown(){
 	}
 
 	updateCountdown();
-	setInterval(updateCountdown, 1000);
+	setInterval(() => {
+		if (!document.hidden) updateCountdown();
+	}, 1000);
 }
 
 // ========== TEMA CLARO/ESCURO ==========
 function initTheme(){
 	if (!themeToggle) return;
-	const saved = localStorage.getItem('theme') || 'dark';
+	const saved = localStorage.getItem('theme') || 'light';
 	applyTheme(saved);
 }
 
@@ -428,7 +440,7 @@ function applyTheme(theme){
 
 if (themeToggle) {
 	themeToggle.addEventListener('click', () => {
-		const current = localStorage.getItem('theme') || 'dark';
+		const current = localStorage.getItem('theme') || 'light';
 		applyTheme(current === 'dark' ? 'light' : 'dark');
 	});
 }
@@ -556,7 +568,19 @@ async function initializeTemperatureMap(){
 			const item = document.createElement('li');
 			item.className = 'hot-city-item';
 			const badge = index === 0 ? '1º' : index === 1 ? '2º' : '3º';
-			item.innerHTML = `<span class="city-rank">${badge}</span><div class="hot-city-main"><span class="hot-city-name">${city.name}</span><span class="hot-city-temp">${city.temperature.toFixed(1)} °C</span></div>`;
+			const rank = document.createElement('span');
+			rank.className = 'city-rank';
+			rank.textContent = badge;
+			const main = document.createElement('div');
+			main.className = 'hot-city-main';
+			const name = document.createElement('span');
+			name.className = 'hot-city-name';
+			name.textContent = city.name;
+			const temperature = document.createElement('span');
+			temperature.className = 'hot-city-temp';
+			temperature.textContent = `${city.temperature.toFixed(1)} °C`;
+			main.append(name, temperature);
+			item.append(rank, main);
 			return item;
 		}));
 		status.textContent = `Atualizado às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -589,7 +613,15 @@ function updateSensorStatus(latest){
 	setStatus(isOnline, isOnline ? 'Online' : 'Offline');
 }
 
+function setChartEmptyState(visible, message = 'Aguardando leituras do sensor...'){
+	const emptyState = document.getElementById('chartEmptyState');
+	if (!emptyState) return;
+	emptyState.textContent = message;
+	emptyState.hidden = !visible;
+}
+
 let chart;
+let lastChartSignature = '';
 const ctx = document.getElementById('meuGrafico').getContext('2d');
 
 function drawFallbackChart(labels, temps, umids){
@@ -648,6 +680,9 @@ function ensureChart(){
 
 	const tempColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-temp').trim() || '#d9473f';
 	const humidityColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-humid').trim() || '#378f83';
+	const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+	const chartTextColor = isLightTheme ? '#666666' : '#a9bfd6';
+	const chartGridColor = isLightTheme ? 'rgba(80, 100, 120, 0.14)' : 'rgba(138, 171, 196, 0.12)';
 
 	chart = new Chart(ctx, {
 		type: 'line',
@@ -698,12 +733,12 @@ function ensureChart(){
 			plugins: {
 				legend: { display: false },
 				tooltip: {
-					backgroundColor: 'rgba(10, 20, 32, 0.96)',
+					backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.96)' : 'rgba(10, 20, 32, 0.96)',
 					borderColor: 'rgba(217,71,63,0.8)',
 					borderWidth: 1,
 					padding: 10,
-					titleColor: '#f6f3eb',
-					bodyColor: '#f6f3eb',
+					titleColor: isLightTheme ? '#1a1a1a' : '#f6f3eb',
+					bodyColor: isLightTheme ? '#1a1a1a' : '#f6f3eb',
 					titleFont: { family: 'IBM Plex Mono', size: 11 },
 					bodyFont: { family: 'Inter', size: 12, weight: '600' },
 					displayColors: true,
@@ -719,13 +754,13 @@ function ensureChart(){
 			scales: {
 				x: {
 					grid: {
-						color: 'rgba(138, 171, 196, 0.12)',
+						color: chartGridColor,
 						tickLength: 0,
 						drawBorder: false
 					},
 					border: { display: false },
 					ticks: {
-						color: '#a9bfd6',
+						color: chartTextColor,
 						maxRotation: 0,
 						autoSkip: true,
 						maxTicksLimit: 6,
@@ -737,7 +772,7 @@ function ensureChart(){
 					position: 'left',
 					grace: '5%',
 					grid: {
-						color: 'rgba(138, 171, 196, 0.12)',
+						color: chartGridColor,
 						drawBorder: false,
 						tickLength: 0
 					},
@@ -777,7 +812,8 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 	const sensorWind = getReadingNumber(latest.vento ?? latest.velocidadeVento ?? latest.ventoKmh);
 	const wind = sensorWind ?? externalWindSpeed;
 
-	if (typeof t !== 'number' || Number.isNaN(t) || typeof u !== 'number' || Number.isNaN(u)){
+	if (t === null || u === null || t < -20 || t > 60 || u < 0 || u > 100){
+		setChartEmptyState(true, 'Leitura inválida do sensor.');
 		tempReading.classList.remove('is-loading');
 		umidReading.classList.remove('is-loading');
 		windReading.classList.remove('is-loading');
@@ -785,6 +821,7 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 		umidSubEl.textContent = 'leitura inválida do sensor';
 		return;
 	}
+	setChartEmptyState(false);
 
 	tempReading.classList.remove('is-loading');
 	umidReading.classList.remove('is-loading');
@@ -807,10 +844,14 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 
 	const c = ensureChart();
 	if (c){
-		c.data.labels = historyLabels;
-		c.data.datasets[0].data = historyTemps;
-		c.data.datasets[1].data = historyUmids;
-		c.update();
+		const chartSignature = `${historyLabels.join('|')}::${historyTemps.join('|')}::${historyUmids.join('|')}`;
+		if (chartSignature !== lastChartSignature){
+			lastChartSignature = chartSignature;
+			c.data.labels = historyLabels;
+			c.data.datasets[0].data = historyTemps;
+			c.data.datasets[1].data = historyUmids;
+			c.update('none');
+		}
 	} else {
 		drawFallbackChart(historyLabels, historyTemps, historyUmids);
 	}
@@ -848,7 +889,9 @@ function startDemoMode(){
 	}
 
 	tick();
-	setInterval(tick, 4000);
+	setInterval(() => {
+		if (!document.hidden) tick();
+	}, 4000);
 }
 
 async function startFirebaseMode(){
@@ -860,7 +903,11 @@ async function startFirebaseMode(){
 		const q = query(collection(db, "leituras"), orderBy("timestamp", "desc"), limit(10));
 
 		onSnapshot(q, (snapshot) => {
-			if (snapshot.empty) return;
+			if (snapshot.empty){
+				setChartEmptyState(true);
+				setStatus(false, 'Offline');
+				return;
+			}
 
 			const docs = snapshot.docs.map(d => d.data()).reverse();
 			const labels = docs.map(d => formatChartTime(getReadingDate(d.timestamp)));
@@ -872,11 +919,13 @@ async function startFirebaseMode(){
 			updateUI(latest, labels, temps, umids);
 		}, (error) => {
 			console.error("❌ Erro ao ler o Firestore:", error);
+			setChartEmptyState(true, 'Não foi possível carregar as leituras.');
 			setStatus(false, 'Offline');
 		});
 
 	} catch(error){
 		console.error("❌ Falha ao inicializar o Firebase:", error);
+		setChartEmptyState(true, 'Não foi possível carregar as leituras.');
 		setStatus(false, 'Offline');
 	}
 }
@@ -887,9 +936,13 @@ setInterval(updateGreeting, 60 * 1000);
 startCountdown();
 loadSavedPortalData();
 fetchExternalWind();
-setInterval(fetchExternalWind, 10 * 60 * 1000);
+setInterval(() => {
+	if (!document.hidden) fetchExternalWind();
+}, 10 * 60 * 1000);
 initializeTemperatureMap();
-setInterval(initializeTemperatureMap, 10 * 60 * 1000);
+setInterval(() => {
+	if (!document.hidden) initializeTemperatureMap();
+}, 10 * 60 * 1000);
 tempReading.classList.add('is-loading');
 umidReading.classList.add('is-loading');
 windReading.classList.add('is-loading');
@@ -897,7 +950,7 @@ windReading.classList.add('is-loading');
 if (!isDemoMode){
 	startFirebaseMode();
 	setInterval(() => {
-		if (lastSensorReadingDate && Date.now() - lastSensorReadingDate.getTime() > SENSOR_OFFLINE_AFTER_MS){
+		if (!document.hidden && lastSensorReadingDate && Date.now() - lastSensorReadingDate.getTime() > SENSOR_OFFLINE_AFTER_MS){
 			setStatus(false, 'Offline');
 		}
 	}, 15000);

@@ -1,4 +1,4 @@
-.school-logo{ width: 128px; height: 128px; object-fit: contain; display: block; margin-bottom: 12px; }
+.school-logo{ width: 128px; height: 128px; object-fit: contain; display: block; margin-bottom: 12px; border-radius: 50%; }
 :root{
 	--bg: #0d1f30;
 	--bg-panel: #12314d;
@@ -30,8 +30,78 @@
 	--danger-bg: #fde8e8;
 }
 
+[data-theme="light"] body{
+	background-image: radial-gradient(circle at 90% 0%, rgba(63,118,191,.08), transparent 30%), linear-gradient(135deg, transparent 0 70%, rgba(245,170,22,.05));
+}
+
+[data-theme="light"] header{
+	background: linear-gradient(135deg, #ffffff, #f3f6fa);
+	border-color: var(--border);
+	box-shadow: 0 18px 36px rgba(40, 55, 70, 0.14);
+}
+
+[data-theme="light"] .school-nav{
+	background: rgba(255, 255, 255, 0.94);
+	border-color: var(--border);
+}
+
+[data-theme="light"] .now-panel{
+	background: linear-gradient(135deg, #ffffff, #f3f6fa);
+	color: var(--text);
+	border-color: var(--border);
+	box-shadow: 0 18px 38px rgba(40, 55, 70, 0.12);
+}
+
+[data-theme="light"] .now-panel .eyebrow,
+[data-theme="light"] .now-class,
+[data-theme="light"] .now-panel .muted{
+	color: var(--text-muted);
+}
+
+[data-theme="light"] .portal-section#avisos,
+[data-theme="light"] .class-card,
+[data-theme="light"] .notice{
+	background: var(--bg-panel);
+	border-color: var(--border);
+}
+
+[data-theme="light"] .climate-section .panel{
+	background: var(--bg-panel);
+	border-color: var(--border);
+	box-shadow: 0 18px 30px rgba(40, 55, 70, 0.10);
+}
+
+[data-theme="light"] .chart-tooltip{
+	background: #ffffff;
+	color: var(--text);
+}
+
 *{ box-sizing: border-box; }
 html{ scroll-behavior: smooth; }
+
+.page-loader{
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 14px;
+	background: var(--bg);
+	color: var(--text-muted);
+	font: 11px 'IBM Plex Mono', monospace;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	transition: opacity .35s ease, visibility .35s ease;
+}
+
+.page-loader.is-hidden{ opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-mark{ width: 82px; height: 82px; overflow: hidden; border-radius: 50%; animation: loaderPulse 1.4s ease-in-out infinite; }
+.loader-mark img{ display: block; width: 100%; height: 100%; object-fit: cover; }
+.page-loader i{ width: 34px; height: 3px; overflow: hidden; border-radius: 99px; background: var(--bg-panel-2); }
+.page-loader i::after{ content: ''; display: block; width: 45%; height: 100%; border-radius: inherit; background: var(--accent-brand); animation: loaderProgress 1s ease-in-out infinite; }
+@keyframes loaderPulse{ 0%, 100%{ transform: scale(.96); opacity: .82; } 50%{ transform: scale(1); opacity: 1; } }
+@keyframes loaderProgress{ from{ transform: translateX(-110%); } to{ transform: translateX(245%); } }
 
 body{
 	margin: 0;
@@ -95,6 +165,7 @@ h1{
 	font-optical-sizing: auto;
 	font-weight: 500;
 	font-size: clamp(28px, 3vw, 42px);
+	color: var(--text);
 	margin: 0;
 	letter-spacing: -0.03em;
 	line-height: 1.08;
@@ -143,7 +214,7 @@ button:focus-visible, a:focus-visible, input:focus-visible{
 	border: 1px solid var(--border);
 	border-radius: var(--radius-md);
 	position: sticky;
-	top: 0;
+	top: 12px;
 	z-index: 2;
 	background: rgba(11, 26, 45, 0.88);
 	backdrop-filter: blur(12px);
@@ -572,6 +643,8 @@ main{ display: grid; gap: 22px; }
 
 .chart-wrap{ position: relative; height: 390px; min-height: 280px; }
 .chart-wrap canvas{ display: block; width: 100% !important; height: 100% !important; }
+.chart-empty{ position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-muted); font: 12px 'IBM Plex Mono', monospace; text-align: center; pointer-events: none; }
+.chart-empty[hidden]{ display: none; }
 .chart-tooltip{ position: absolute; display: none; pointer-events: none; z-index: 3; padding: 8px 10px; border: 1px solid var(--accent-temp); border-radius: 3px; background: var(--accent-ink); color: #f6f3eb; font: 11px 'IBM Plex Mono', monospace; white-space: nowrap; box-shadow: 0 5px 14px rgba(0,0,0,.2); }
 .map-panel{ margin-top: 18px; padding: 10px 12px; border: 0; background: transparent; }
 .map-mini-header{ display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
