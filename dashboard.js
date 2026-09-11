@@ -502,6 +502,13 @@ function applyTheme(theme) {
   $('themeToggle').textContent = theme === 'dark' ? '☀' : '◐';
 }
 
+function updateGreeting() {
+  const greeting = $('greeting');
+  if (!greeting) return;
+  const hour = new Date().getHours();
+  greeting.textContent = hour < 12 ? 'Bom dia!' : hour < 18 ? 'Boa tarde!' : 'Boa noite!';
+}
+
 function setupDateFilter() {
   const viewHeading = document.querySelector('#view-data .view-heading');
   if (!viewHeading || $('selectedDate')) return;
@@ -519,6 +526,8 @@ setupClimateCards();
 hideHomeExtras();
 setupNoticeView();
 setupSchoolViews();
+updateGreeting();
+setInterval(updateGreeting, 60 * 1000);
 $('themeToggle').addEventListener('click', () => applyTheme(localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'));
 applyTheme(localStorage.getItem('theme') || 'dark');
 function requestLocation(button) {
