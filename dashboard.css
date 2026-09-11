@@ -180,6 +180,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .school-hero { display: grid; grid-template-columns: 1.25fr .75fr; gap: 10px; margin-top: 10px; }
 .school-now { min-height: 245px; padding: 27px 24px; border: 1px solid #76601d; border-radius: 16px; background: linear-gradient(135deg, #10263d, #0b1b2e); }
 .school-now h2 { margin: 14px 0 7px; font: 600 24px 'Space Grotesk', sans-serif; }
+.school-clock { display: block; margin-top: 15px; color: #f7af1d; font: 600 30px 'IBM Plex Mono', monospace; letter-spacing: .04em; }
 .school-now p { margin: 0; color: #e5eef7; font-size: 14px; }
 .school-now small { display: block; margin-top: 23px; color: #e9f1fa; font-size: 10px; }
 .school-dash { margin-top: 34px; color: #f7af1d; font: 20px 'IBM Plex Mono', monospace; letter-spacing: 3px; }

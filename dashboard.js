@@ -179,6 +179,12 @@ function setupSchoolViews() {
   school.innerHTML = `<nav class="school-tabs" aria-label="Seções escolares"><a class="active" href="#school">Agora</a><a href="#schoolTimeline">Aulas</a><a href="#schoolMenuMain">Almoço</a><a href="#schoolNotices">Avisos</a><a href="#schoolClasses">Turmas</a><a href="#home" data-open-view="home">Clima</a><a href="admin.html">Administração</a></nav><div class="school-hero"><section class="school-now"><span class="kicker">O que está acontecendo agora?</span><h2 id="schoolCurrentTitle">Atividades encerradas</h2><p id="schoolCurrentDetail">Até o próximo dia letivo</p><div class="school-dash" aria-hidden="true">—　—　•　—　—　•　—</div><small id="schoolNext">Próxima aula: amanhã, 06:50</small></section><section class="panel school-menu" id="schoolMenuPanel"><div class="panel-header"><div><span class="kicker">Almoço</span><h3>Cardápio de hoje</h3></div><span class="status-pill">servido hoje</span></div><strong id="schoolMenuMain">Cardápio ainda não publicado</strong><p id="schoolMenuDetails">Consulte a administração para saber o almoço de hoje.</p></section></div><section class="panel school-timeline-panel"><div class="panel-header"><div><span class="kicker">Aulas</span><h3>Linha do tempo do dia</h3></div><span class="updated" id="schoolDateLabel"></span></div><div class="school-timeline" id="schoolTimeline"></div></section><section class="panel school-summary"><div class="panel-header"><div><span class="kicker">Resumo do dia</span><h3>Na escola hoje</h3></div><span class="updated" id="schoolSummaryDate"></span></div><div class="school-summary-grid"><article><span>Horário</span><strong>06:50 · 16:10</strong><small id="schoolSummarySchedule">A programação do dia</small></article><article><span>Aula em andamento</span><strong id="schoolSummaryClass">Atividades encerradas</strong><small id="schoolSummaryDetail">Até o próximo dia letivo</small></article><article class="urgent"><span>Avisos urgentes</span><strong id="schoolSummaryNotice">Nenhum aviso urgente</strong><small>Central de avisos</small></article></div></section><div class="school-layout school-lower"><section class="panel"><div class="panel-header"><div><span class="kicker">Avisos</span><h3>Central de avisos</h3></div><span class="updated" id="schoolEventCount">0 publicados</span></div><div class="school-notices" id="schoolNotices"></div></section><section class="panel"><div class="panel-header"><div><span class="kicker">Turmas</span><h3>Horários e perfis</h3></div><span class="updated" id="schoolClassCount">0 cadastradas</span></div><div class="school-classes" id="schoolClasses"></div></section></div>`;
   school.querySelector('.school-tabs')?.remove();
   main.append(school);
+  school.querySelector('.school-dash')?.remove();
+  const schoolClock = document.createElement('time');
+  schoolClock.className = 'school-clock';
+  schoolClock.id = 'schoolClock';
+  schoolClock.setAttribute('aria-label', 'Tempo até a próxima aula');
+  school.querySelector('.school-now p').after(schoolClock);
   const schedules = document.createElement('section');
   schedules.className = 'view'; schedules.id = 'view-schedules';
   schedules.innerHTML = `<div class="view-heading"><div><span class="kicker">Horários escolares</span><h2>Grades e perfis.</h2><p>Escolha uma turma para consultar a grade semanal.</p></div></div><section class="schedule-cards" id="scheduleCards"></section>`;
@@ -193,10 +199,43 @@ function setupSchoolViews() {
   renderCredits();
   subscribePortalData({ onMenu: renderSchoolMenu, onEvents: renderSchoolEvents, onClasses: renderSchoolClasses });
   updateSchoolSchedule();
+  updateSchoolClock();
+  setInterval(updateSchoolClock, 1000);
   setInterval(() => { if (!document.hidden) updateSchoolSchedule(); }, 30000);
 }
 
 const schoolPeriods = [['06:50', 'Aula 1'], ['07:50', 'Aula 2'], ['08:50', 'Intervalo'], ['09:10', 'Aula 3'], ['10:10', 'Aula 4'], ['11:10', 'Aula 5'], ['12:10', 'Almoço'], ['12:50', 'Aula 6'], ['13:50', 'Aula 7'], ['14:50', 'Intervalo'], ['15:10', 'Aula 8']];
+function updateSchoolClock() {
+  const clock = $('schoolClock');
+  if (!clock) return;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const parseMinutes = (time) => {
+    const [hour, minute] = time.split(':').map(Number);
+    return hour * 60 + minute;
+  };
+  const currentIndex = schoolPeriods.findIndex(([start], index) => {
+    const end = schoolPeriods[index + 1]?.[0] || '16:10';
+    return currentMinutes >= parseMinutes(start) && currentMinutes < parseMinutes(end);
+  });
+  let target = new Date(now);
+  let nextStart;
+  if (currentIndex >= 0) {
+    nextStart = schoolPeriods[currentIndex + 1]?.[0] || '16:10';
+  } else {
+    nextStart = schoolPeriods.find(([start]) => parseMinutes(start) > currentMinutes)?.[0] || '06:50';
+    if (currentMinutes >= parseMinutes(nextStart)) target.setDate(target.getDate() + 1);
+  }
+  const [nextHour, nextMinute] = nextStart.split(':').map(Number);
+  target.setHours(nextHour, nextMinute, 0, 0);
+  const remaining = Math.max(0, target.getTime() - now.getTime());
+  const totalSeconds = Math.floor(remaining / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  clock.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function updateSchoolSchedule() {
   const timeline = $('schoolTimeline'); if (!timeline) return;
   const now = new Date(); const minutes = now.getHours() * 60 + now.getMinutes();
