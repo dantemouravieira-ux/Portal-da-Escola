@@ -16,10 +16,18 @@ service cloud.firestore {
 
     match /avisos/{document} {
       allow read: if true;
-      allow create, update: if isAdmin() &&
+      allow create: if isAdmin() &&
         request.resource.data.keys().hasOnly(['title', 'date', 'details', 'createdAt']) &&
-        hasValidText('title', 120) && hasValidText('date', 80) &&
-        hasValidText('details', 500) && request.resource.data.createdAt is int;
+        hasValidText('title', 120) &&
+        hasValidText('date', 80) &&
+        hasValidText('details', 500) &&
+        request.resource.data.createdAt is int;
+      allow update: if isAdmin() &&
+        request.resource.data.keys().hasOnly(['title', 'date', 'details', 'createdAt']) &&
+        hasValidText('title', 120) &&
+        hasValidText('date', 80) &&
+        hasValidText('details', 500) &&
+        request.resource.data.createdAt is int;
       allow delete: if isAdmin();
     }
 
@@ -27,12 +35,19 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isAdmin() &&
         request.resource.data.keys().hasOnly(['name', 'teacher', 'contact', 'students', 'materials', 'tasks', 'observations', 'year']) &&
-        hasValidText('name', 120) && hasValidText('teacher', 120) &&
-        request.resource.data.students is int && request.resource.data.students >= 1 && request.resource.data.students <= 200 &&
-        request.resource.data.contact is string && request.resource.data.contact.size() <= 200 &&
-        request.resource.data.materials is string && request.resource.data.materials.size() <= 2000 &&
-        request.resource.data.tasks is string && request.resource.data.tasks.size() <= 2000 &&
-        request.resource.data.observations is string && request.resource.data.observations.size() <= 2000 &&
+        hasValidText('name', 120) &&
+        hasValidText('teacher', 120) &&
+        request.resource.data.students is int &&
+        request.resource.data.students >= 1 &&
+        request.resource.data.students <= 200 &&
+        request.resource.data.contact is string &&
+        request.resource.data.contact.size() <= 200 &&
+        request.resource.data.materials is string &&
+        request.resource.data.materials.size() <= 2000 &&
+        request.resource.data.tasks is string &&
+        request.resource.data.tasks.size() <= 2000 &&
+        request.resource.data.observations is string &&
+        request.resource.data.observations.size() <= 2000 &&
         hasValidText('year', 60);
       allow delete: if isAdmin();
     }
@@ -46,9 +61,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin() && document == 'portal' &&
         request.resource.data.keys().hasOnly(['humidityAlertLimit', 'temperatureLimit', 'monitorPoint']) &&
-        request.resource.data.humidityAlertLimit is number && request.resource.data.humidityAlertLimit >= 0 && request.resource.data.humidityAlertLimit <= 100 &&
-        request.resource.data.temperatureLimit is number && request.resource.data.temperatureLimit >= 0 && request.resource.data.temperatureLimit <= 60 &&
-        request.resource.data.monitorPoint is string && request.resource.data.monitorPoint.size() > 0 && request.resource.data.monitorPoint.size() <= 120;
+        request.resource.data.humidityAlertLimit is number &&
+        request.resource.data.humidityAlertLimit >= 0 &&
+        request.resource.data.humidityAlertLimit <= 100 &&
+        request.resource.data.temperatureLimit is number &&
+        request.resource.data.temperatureLimit >= 0 &&
+        request.resource.data.temperatureLimit <= 60 &&
+        request.resource.data.monitorPoint is string &&
+        request.resource.data.monitorPoint.size() > 0 &&
+        request.resource.data.monitorPoint.size() <= 120;
     }
 
     match /leituras/{document} {

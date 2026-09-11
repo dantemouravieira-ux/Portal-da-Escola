@@ -1,5 +1,5 @@
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js';
-import { addClass, addEvent, auth, removeEvent, saveMenu, saveSettings, subscribePortalData } from './firebase-data.js';
+import { addClass, addEvent, auth, removeClass, removeEvent, removeOldReadings, saveMenu, saveSettings, subscribePortalData } from './firebase-data.js';
 
 const themeToggle = document.getElementById('themeToggle');
 const adminLogin = document.getElementById('adminLogin');
@@ -69,6 +69,32 @@ function renderAdminEvents(events = []) {
 			const confirmed = window.confirm(`Excluir o aviso "${event.title}"?`);
 			if (!confirmed) return;
 			try { await removeEvent(event.id); } catch (error) { feedback('eventFeedback', 'Não foi possível excluir o aviso.'); console.error(error); }
+		});
+		item.append(content, removeButton);
+		list.append(item);
+	});
+}
+
+function renderAdminClasses(classes = []) {
+	const list = document.getElementById('adminClassList');
+	list.replaceChildren();
+	if (!classes.length) { list.textContent = 'Nenhuma turma cadastrada.'; return; }
+	classes.forEach((classData) => {
+		const item = document.createElement('div');
+		item.className = 'admin-event-item';
+		const content = document.createElement('div');
+		const title = document.createElement('strong');
+		title.textContent = classData.name;
+		const details = document.createElement('small');
+		details.textContent = `${classData.year || 'Sem nível'} · ${classData.teacher || 'Sem professor'} · ${classData.students || 0} alunos`;
+		content.append(title, details);
+		const removeButton = document.createElement('button');
+		removeButton.className = 'remove-event';
+		removeButton.type = 'button';
+		removeButton.textContent = 'Excluir';
+		removeButton.addEventListener('click', async () => {
+			if (!window.confirm(`Excluir a turma "${classData.name}"?`)) return;
+			try { await removeClass(classData.id); } catch (error) { feedback('classFeedback', 'Não foi possível excluir a turma.'); console.error(error); }
 		});
 		item.append(content, removeButton);
 		list.append(item);
@@ -158,8 +184,27 @@ document.getElementById('eventForm').addEventListener('submit', async (event) =>
 	} catch (error) { feedback('eventFeedback', 'Não foi possível publicar o aviso.'); console.error(error); }
 });
 
+document.getElementById('readingCleanupForm').addEventListener('submit', async (event) => {
+	event.preventDefault();
+	const days = Number(document.getElementById('readingRetentionDays').value);
+	if (!Number.isInteger(days) || days < 1) return feedback('readingCleanupFeedback', 'Informe pelo menos 1 dia.');
+	if (!window.confirm(`Apagar todas as leituras com mais de ${days} dias? Essa ação não pode ser desfeita.`)) return;
+	const button = event.target.querySelector('button');
+	button.disabled = true;
+	feedback('readingCleanupFeedback', 'Procurando registros antigos...');
+	try {
+		const removed = await removeOldReadings(days);
+		feedback('readingCleanupFeedback', removed ? `${removed} registro(s) apagado(s).` : 'Nenhum registro antigo encontrado.');
+	} catch (error) {
+		feedback('readingCleanupFeedback', 'Não foi possível apagar os registros.');
+		console.error(error);
+	} finally {
+		button.disabled = false;
+	}
+});
+
 onAuthStateChanged(auth, (user) => {
 	setAdminAccess(Boolean(user));
 	if (unsubscribePortalData) unsubscribePortalData();
-	if (user) unsubscribePortalData = subscribePortalData({ onMenu: renderMenu, onSettings: renderSettings, onEvents: renderAdminEvents });
+	if (user) unsubscribePortalData = subscribePortalData({ onMenu: renderMenu, onSettings: renderSettings, onEvents: renderAdminEvents, onClasses: renderAdminClasses });
 });

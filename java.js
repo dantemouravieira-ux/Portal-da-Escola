@@ -165,9 +165,14 @@ function renderSchoolTodaySummary() {
 function renderPortalEvents(savedEvents = []){
 	const noticeList = document.getElementById('noticeList');
 	const noticesSection = document.getElementById('avisos');
+	const noticeCount = document.getElementById('noticeCount');
 	if (!noticeList || !noticesSection) return;
 	noticeList.replaceChildren();
 	noticesSection.hidden = savedEvents.length === 0;
+	if (noticeCount) {
+		noticeCount.textContent = savedEvents.length;
+		noticeCount.hidden = savedEvents.length === 0;
+	}
 	savedEvents.forEach((event) => {
 		const notice = document.createElement('article');
 		notice.className = 'notice';
@@ -419,7 +424,7 @@ function startCountdown(){
 // ========== TEMA CLARO/ESCURO ==========
 function initTheme(){
 	if (!themeToggle) return;
-	const saved = localStorage.getItem('theme') || 'light';
+	const saved = localStorage.getItem('theme') || 'dark';
 	applyTheme(saved);
 }
 
@@ -860,12 +865,30 @@ function updateUI(latest, historyLabels, historyTemps, historyUmids){
 	lastUpdatedEl.textContent = readingDate
 		? 'última leitura: ' + readingDate.toLocaleTimeString('pt-BR')
 		: 'última leitura: horário indisponível';
+	const dashboardUpdated = document.getElementById('dashboardUpdated');
+	const sidebarUpdated = document.getElementById('sidebarUpdated');
+	const staleReading = document.getElementById('staleReading');
+	const formattedTime = readingDate ? readingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'horário indisponível';
+	if (dashboardUpdated) dashboardUpdated.textContent = `Atualizado às ${formattedTime}`;
+	if (sidebarUpdated) sidebarUpdated.textContent = `Última atualização: ${formattedTime}`;
+	if (staleReading) staleReading.hidden = !readingDate || Date.now() - readingDate.getTime() <= SENSOR_OFFLINE_AFTER_MS;
 }
 
 function setStatus(online, label){
 	statusIndicator.classList.toggle('offline', !online);
 	statusText.textContent = label;
+	const sidebarStatus = document.getElementById('sidebarStatus');
+	if (sidebarStatus) sidebarStatus.textContent = online ? 'Estação online' : 'Estação offline';
 }
+
+document.getElementById('sidebarLocationButton')?.addEventListener('click', () => {
+	if (!navigator.geolocation) return;
+	navigator.geolocation.getCurrentPosition(
+		() => { document.getElementById('sidebarLocationButton').textContent = '⌖ Localização atualizada'; },
+		() => { document.getElementById('sidebarLocationButton').textContent = '⌖ Permissão negada'; },
+		{ timeout: 8000, maximumAge: 300000 }
+	);
+});
 
 function startDemoMode(){
 	setStatus(false, 'modo demonstração');

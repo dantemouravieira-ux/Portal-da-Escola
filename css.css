@@ -464,6 +464,8 @@ main{ display: grid; gap: 22px; }
 .admin-event-item strong{ color: var(--text); font-size: 12px; }
 .admin-event-item small{ margin-top: 4px; font-size: 10px; }
 .remove-event{ border: 1px solid var(--danger); border-radius: 3px; padding: 7px 9px; color: var(--danger); background: transparent; cursor: pointer; font: 11px 'IBM Plex Mono', monospace; }
+.remove-event:disabled{ cursor: wait; opacity: .6; }
+.cleanup-button{ justify-self: start; }
 .admin-form h3{ margin: 0 0 18px; font: 18px 'Fraunces', serif; font-weight: 500; }
 .menu-day{ padding: 12px; border: 1px solid var(--border); background: var(--bg-panel); }
 .menu-day label{ margin: 9px 0; }
@@ -842,6 +844,101 @@ footer{
 
 @media (prefers-reduced-motion: reduce){
 	*, html { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Dashboard layout */
+.dashboard-shell{
+	max-width: 1440px;
+	display: grid;
+	grid-template-columns: 190px minmax(0, 1fr);
+	gap: 26px;
+}
+.dashboard-sidebar{
+	position: sticky;
+	top: 20px;
+	height: calc(100vh - 40px);
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	border-right: 1px solid rgba(117, 128, 190, .16);
+	padding: 8px 14px 8px 0;
+}
+.sidebar-brand{ display: flex; align-items: center; gap: 10px; padding: 8px 4px 20px; border-bottom: 1px solid rgba(117, 128, 190, .16); }
+.sidebar-brand .school-logo{ width: 30px; height: 30px; margin: 0; }
+.sidebar-brand strong{ display: block; color: #f5f7ff; font-size: 15px; letter-spacing: -.02em; }
+.sidebar-brand small{ display: block; margin-top: 3px; color: #7883a9; font: 8px 'IBM Plex Mono', monospace; line-height: 1.35; }
+.dashboard-sidebar .school-nav{ position: static; display: grid; gap: 7px; margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.dashboard-sidebar .school-nav a{ display: flex; align-items: center; gap: 11px; min-height: 38px; padding: 9px 11px; border: 1px solid transparent; border-radius: 7px; color: #929bc0; font-size: 11px; text-decoration: none; }
+.dashboard-sidebar .school-nav a:hover, .dashboard-sidebar .school-nav a.active{ color: #f8f8ff; background: linear-gradient(90deg, rgba(105, 57, 224, .7), rgba(72, 61, 166, .55)); border-color: rgba(139, 100, 255, .65); }
+.dashboard-sidebar .school-nav a span:first-child{ width: 16px; color: #a993ff; font-size: 16px; text-align: center; }
+.nav-count{ display: grid; place-items: center; width: 16px; height: 16px; margin-left: auto; border-radius: 50%; color: #fff; background: #7140e7; font: 9px 'IBM Plex Mono', monospace; }
+.sidebar-location{ display: grid; gap: 5px; padding: 13px 10px; border: 1px solid rgba(117, 128, 190, .18); border-radius: 8px; background: rgba(13, 24, 51, .56); }
+.sidebar-location .eyebrow{ margin: 0; font-size: 8px; color: #7883a9; }
+.sidebar-location strong{ font-size: 11px; color: #eef0ff; }
+.sidebar-location small{ color: #929bc0; font-size: 10px; }
+.location-button{ margin-top: 8px; padding: 7px 8px; border: 1px solid #3c4a71; border-radius: 5px; color: #c1c8eb; background: transparent; cursor: pointer; font-size: 9px; }
+.location-button:hover{ border-color: #8365ed; color: #fff; }
+.sidebar-footer{ display: grid; grid-template-columns: 8px 1fr; gap: 3px 7px; align-items: center; margin-top: auto; padding: 13px 10px; border: 1px solid rgba(117, 128, 190, .18); border-radius: 8px; color: #afb7db; font-size: 10px; }
+.sidebar-footer .dot{ width: 6px; height: 6px; border-radius: 50%; background: #a477ff; grid-row: span 2; }
+.sidebar-footer small{ color: #6f7a9f; font-size: 8px; }
+.dashboard-content{ min-width: 0; }
+.dashboard-content > header{ margin-bottom: 18px; padding: 8px 0 15px; border: 0; border-bottom: 1px solid rgba(117, 128, 190, .16); border-radius: 0; background: transparent; box-shadow: none; }
+.dashboard-content > header::before{ display: none; }
+.dashboard-content .hero-meta{ display: grid; gap: 4px; }
+.dashboard-content .eyebrow{ color: #8c75e7; }
+.dashboard-content h1{ font-family: 'Inter', sans-serif; font-size: clamp(24px, 3vw, 31px); font-weight: 700; letter-spacing: -.04em; }
+.dashboard-content header .header-right{ gap: 16px; }
+.dashboard-content .status{ padding: 8px 11px; border: 1px solid rgba(117, 128, 190, .25); border-radius: 99px; font-size: 9px; }
+.dashboard-toolbar{ display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; margin: 8px 0 10px; }
+.dashboard-toolbar h2{ margin: 0; font-size: 14px; font-weight: 600; }
+.dashboard-updated{ color: #7883a9; font: 9px 'IBM Plex Mono', monospace; }
+.stale-reading{ margin-bottom: 10px; padding: 9px 12px; border: 1px solid rgba(184, 137, 44, .45); border-radius: 6px; color: #d8b56d; background: rgba(91, 62, 22, .35); font-size: 10px; }
+.stale-reading[hidden]{ display: none; }
+.welcome-grid{ grid-template-columns: 1fr 1fr; gap: 12px; }
+.now-panel, .lunch-status{ min-height: 158px; padding: 18px; border-radius: 8px; }
+.now-panel{ background: linear-gradient(135deg, #121b3b, #10152c); border-color: rgba(100, 75, 202, .34); box-shadow: none; }
+.now-panel h2, .lunch-status h2{ font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; }
+.countdown{ font-size: 34px; color: #a477ff; }
+.lunch-status{ background: linear-gradient(135deg, #101b3b, #101a2f); }
+.lunch-status h2{ margin-top: 14px; }
+.portal-section, .panel{ border-radius: 8px; background: #0f1932; border-color: rgba(117, 128, 190, .18); box-shadow: none; }
+.portal-section{ padding: 18px; }
+.school-today-grid{ gap: 10px; }
+.today-card{ min-height: 102px; padding: 14px; border-radius: 7px; background: #111d39; }
+.today-card::before{ background: linear-gradient(90deg, #7040e7, transparent 80%); }
+.today-card strong{ font-family: 'Inter', sans-serif; font-size: 15px; }
+.climate-section{ margin-top: 14px; }
+.climate-section .panel{ background: #0f1932; border-radius: 8px; }
+.gauges{ grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.gauge-card{ min-height: 150px; padding: 14px; align-items: flex-start; border-radius: 8px; background: #101a34; border-color: rgba(117, 128, 190, .18); box-shadow: none; }
+.gauge-card .label{ margin-bottom: 6px; color: #8f99be; font-size: 9px; text-transform: uppercase; }
+.gauge-svg{ display: none; }
+.gauge-reading{ margin-top: 18px; }
+.gauge-reading .num{ font-family: 'Inter', sans-serif; font-size: 29px; font-weight: 700; }
+.gauge-sub{ margin-top: 5px; color: #a477ff; font-size: 9px; }
+.wind-card{ justify-content: flex-start; min-height: 150px; }
+.wind-icon{ width: 28px; height: 28px; margin: 18px 0 2px; border: 0; color: #a477ff; font-size: 24px; }
+.chart-wrap{ height: 330px; }
+.chart-heading h2{ font-family: 'Inter', sans-serif; font-size: 14px; }
+.live-badge{ padding: 5px 8px; font-size: 9px; }
+.map-panel{ margin-top: 12px; }
+.school-today{ margin-top: 12px; }
+
+@media (max-width: 800px){
+	.dashboard-shell{ display: block; }
+	.dashboard-sidebar{ position: static; height: auto; border: 0; padding: 0; gap: 14px; }
+	.sidebar-brand{ padding-bottom: 10px; }
+	.dashboard-sidebar .school-nav{ display: flex; overflow-x: auto; padding-bottom: 3px; }
+	.dashboard-sidebar .school-nav a{ flex: 0 0 auto; }
+	.sidebar-location, .sidebar-footer{ display: none; }
+	.dashboard-content > header{ margin-top: 14px; }
+}
+
+@media (max-width: 520px){
+	.dashboard-toolbar{ align-items: flex-start; flex-direction: column; }
+	.welcome-grid{ grid-template-columns: 1fr; }
+	.gauges{ grid-template-columns: 1fr 1fr; }
+	.wind-card{ grid-column: 1 / -1; }
 }
 
 .is-loading .num, .is-loading .gauge-sub{

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Painel de monitoramento climático em tempo real com dados de temperatura e umidade coletados por ESP32 e DHT11.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://www.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.open-meteo.com; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-ancestors 'none';">
+<title>Portal da Escola</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231b1f2a'/><circle cx='12' cy='12' r='6' fill='none' stroke='%23d98a3d' stroke-width='2'/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css.css">
+</head>
+<body>
+
+<div class="page-loader" id="pageLoader" role="status" aria-live="polite" aria-label="Carregando portal">
+  <div class="loader-mark"><img src="WhatsApp%20Image%202026-09-02%20at%2011.27.01.jpeg" alt=""></div>
+  <span>Carregando portal</span>
+  <i aria-hidden="true"></i>
+</div>
+
+<div class="page">
+
+  <header>
+    <div class="brand-block">
+      <img class="school-logo" src="WhatsApp%20Image%202026-09-02%20at%2011.27.01.jpeg" alt="CETI Nonato Valente">
+      <div class="hero-meta">
+        <span class="eyebrow">Portal da escola</span>
+        <h1 id="welcomeGreeting">Bom dia, comunidade</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro/escuro">🌙</button>
+      <div class="status offline" id="statusIndicator" role="status" aria-live="polite" aria-label="Status da plaquinha">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="statusText">Offline</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="school-nav" aria-label="Navegação principal">
+    <a class="active" href="#agora">Agora</a>
+    <a href="#aulas">Aulas</a>
+    <a href="#almoco">Almoço</a>
+    <a href="#avisos">Avisos</a>
+    <a href="#turmas">Turmas</a>
+    <a href="#clima">Clima</a>
+    <a href="admin.html">Administração</a>
+  </nav>
+
+  <main>
+    <section class="welcome-grid" id="agora">
+      <div class="now-panel">
+        <span class="eyebrow">O que está acontecendo agora?</span>
+        <h2 id="currentPeriod">Aula em andamento</h2>
+        <p class="now-class" id="currentPeriodDetail">Aula da manhã</p>
+        <div class="countdown" id="countdown" aria-live="polite">00:42:18</div>
+        <p class="muted" id="nextPeriod">Próxima aula: 10:20</p>
+      </div>
+      <div class="lunch-status" id="almoco">
+        <div class="section-heading"><span class="eyebrow">Almoço</span><span class="status-pill">servido hoje</span></div>
+        <h2 id="menuDisplayMain">Arroz, feijão e frango assado</h2>
+        <p class="muted" id="menuDisplayDetails">Salada, legumes e fruta · 11:30–13:00</p>
+      </div>
+    </section>
+
+    <section class="portal-section" id="aulas">
+      <div class="section-heading"><div><span class="eyebrow">Aulas</span><h2>Linha do tempo do dia</h2></div><div class="timeline-tools"><span class="date-label" id="timelineDate">Terça, 02 de setembro</span><button class="timeline-next" id="timelineNext" type="button" aria-label="Avançar para a próxima aula" title="Próxima aula">›</button></div></div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="portal-section school-today" aria-labelledby="schoolTodayTitle">
+      <div class="section-heading"><div><span class="eyebrow">Resumo do dia</span><h2 id="schoolTodayTitle">Na escola hoje</h2></div><span class="date-label" id="todayDateLabel">Hoje</span></div>
+      <div class="school-today-grid">
+        <div class="today-card">
+          <span class="today-label">Horário</span>
+          <strong id="todaySchedule">06:50 · 16:10</strong>
+          <small id="todayScheduleDetail">A programação do dia</small>
+        </div>
+        <div class="today-card">
+          <span class="today-label">Aula em andamento</span>
+          <strong id="todayCurrentClass">Aula 1</strong>
+          <small id="todayCurrentClassDetail">Período da manhã</small>
+        </div>
+        <div class="today-card urgent">
+          <span class="today-label">Avisos urgentes</span>
+          <strong id="todayUrgentNotice">Nenhum aviso urgente</strong>
+          <small id="todayUrgentMeta">Central de avisos</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="portal-section" id="avisos" hidden>
+      <div class="section-heading"><div><span class="eyebrow">Avisos</span><h2>Central de avisos</h2></div><a class="text-link" href="#avisos">Ver todos</a></div>
+      <div class="notice-list" id="noticeList"></div>
+    </section>
+
+    <section class="portal-section" id="turmas">
+      <div class="section-heading"><div><span class="eyebrow">Páginas das turmas</span><h2>Horários e perfis</h2></div></div>
+      <div class="class-grid" id="classGrid">
+        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS A</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Silas</p><a href="horario-ds.html?turma=ds1a">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">1ª série</span><h3>1ª DS B</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Silvana</p><a href="horario-ds.html?turma=ds1b">Ver horário <span>→</span></a></article>
+        <article class="class-card featured-class"><span class="class-year">2ª série</span><h3>2ª DS</h3><p>Desenvolvimento de Sistemas<br>Professor responsável: Vandson</p><a href="horario-ds.html?turma=ds2" target="_blank" rel="noopener">Abrir horário ↗</a></article>
+        <article class="class-card"><span class="class-year">2ª série</span><h3>2ª marketing</h3><p>Turma integrada<br>Professor responsável: Valdeir</p><a href="horario-ds.html?turma=marketing2">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª manhã</h3><p>Período da manhã</p><a href="horario-ds.html?turma=3manha">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">3ª série</span><h3>3ª tarde</h3><p>Período da tarde</p><a href="horario-ds.html?turma=3tarde">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º manhã</h3><p>Período da manhã</p><a href="horario-ds.html?turma=9manha">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde A</h3><p>Período da tarde</p><a href="horario-ds.html?turma=9tardea">Ver horário <span>→</span></a></article>
+        <article class="class-card"><span class="class-year">9º ano</span><h3>9º tarde B</h3><p>Período da tarde</p><a href="horario-ds.html?turma=9tardeb">Ver horário <span>→</span></a></article>
+      </div>
+    </section>
+
+    <section class="portal-section climate-section" id="clima" aria-labelledby="clima-title">
+      <div class="section-heading"><div><span class="eyebrow">Temperatura</span><h2 id="clima-title">Clima no pátio</h2></div><span class="muted">Leitura em tempo real</span></div>
+
+  <div class="gauges">
+    <div class="gauge-card">
+      <span class="label">Temperatura</span>
+      <svg class="gauge-svg" viewBox="0 0 120 120" role="img" aria-label="Medidor de temperatura">
+        <circle class="gauge-ring-bg" cx="60" cy="60" r="50"></circle>
+        <circle class="gauge-ring-fg" id="ringTemp" cx="60" cy="60" r="50"
+          stroke="var(--accent-temp)" stroke-dasharray="314" stroke-dashoffset="314"
+          transform="rotate(-90 60 60)"></circle>
+      </svg>
+      <div class="gauge-reading" id="tempReading" aria-live="polite">
+        <span class="num" id="tempValue">--</span><span class="unit">°C</span>
+      </div>
+      <div class="gauge-sub" id="tempSub">aguardando leitura</div>
+    </div>
+
+    <div class="gauge-card">
+      <span class="label">Umidade</span>
+      <svg class="gauge-svg" viewBox="0 0 120 120" role="img" aria-label="Medidor de umidade">
+        <circle class="gauge-ring-bg" cx="60" cy="60" r="50"></circle>
+        <circle class="gauge-ring-fg" id="ringUmid" cx="60" cy="60" r="50"
+          stroke="var(--accent-humid)" stroke-dasharray="314" stroke-dashoffset="314"
+          transform="rotate(-90 60 60)"></circle>
+      </svg>
+      <div class="gauge-reading" id="umidReading" aria-live="polite">
+        <span class="num" id="umidValue">--</span><span class="unit">%</span>
+      </div>
+      <div class="gauge-sub" id="umidSub">aguardando leitura</div>
+    </div>
+
+    <div class="gauge-card wind-card">
+      <span class="label">Vento</span>
+      <div class="wind-icon" aria-hidden="true">↙</div>
+      <div class="gauge-reading" id="windReading" aria-live="polite">
+        <span class="num" id="windValue">--</span><span class="unit">km/h</span>
+      </div>
+      <div class="gauge-sub" id="windSub">aguardando leitura</div>
+    </div>
+  </div>
+
+  <div id="alertaUmidade" class="alerta-umidade" role="alert" aria-live="assertive">
+    Atenção: Umidade Crítica! Risco à saúde.
+  </div>
+
+  <div id="alertaTemperatura" class="alerta-umidade" role="alert" aria-live="assertive">
+    Atenção: temperatura acima do limite configurado.
+  </div>
+
+  <section class="panel">
+    <div class="chart-heading"><h2>Histórico recente</h2><span class="live-badge"><i></i> ao vivo</span></div>
+    <div class="chart-legend" aria-label="Legenda do gráfico"><span class="temperature-key"><i></i>Temperatura °C</span><span class="humidity-key"><i></i>Umidade %</span></div>
+    <div class="chart-wrap"><canvas id="meuGrafico"></canvas><div class="chart-empty" id="chartEmptyState" role="status">Aguardando leituras do sensor...</div><div class="chart-tooltip" id="chartTooltip" role="status"></div></div>
+  </section>
+
+  <section class="panel map-panel" aria-labelledby="hot-cities-title">
+    <div class="map-mini-header"><span class="eyebrow">Temperatura no Piauí</span><h2 id="hot-cities-title">Top 3</h2></div>
+    <aside class="hot-cities" aria-live="polite">
+      <p id="mapStatus" class="map-status">Carregando temperaturas...</p>
+      <ol id="hotCitiesList"></ol>
+    </aside>
+  </section>
+
+  <footer>
+    <span>ESP32 · DHT11 · estação do pátio</span>
+    <span><a class="credits-link" href="creditos.html">Créditos</a> · <span id="lastUpdated">última leitura: --</span></span>
+  </footer>
+</section>
+  </main>
+</div>
+
+<script type="module" src="java.js"></script>
+
+</body>
+</html>

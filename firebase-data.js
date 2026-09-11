@@ -4,11 +4,14 @@ import {
 	collection,
 	deleteDoc,
 	doc,
+	getDocs,
 	getFirestore,
 	onSnapshot,
 	orderBy,
 	query,
 	setDoc,
+	where,
+	writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js';
 
@@ -55,5 +58,22 @@ export function addEvent(eventData) {
 
 export function removeEvent(eventId) {
 	return deleteDoc(doc(db, 'avisos', eventId));
+}
+
+export function removeClass(classId) {
+	return deleteDoc(doc(db, 'turmas', classId));
+}
+
+export async function removeOldReadings(days) {
+	const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+	const oldReadings = await getDocs(query(collection(db, 'leituras'), where('timestamp', '<', cutoff)));
+	let removed = 0;
+	for (let start = 0; start < oldReadings.docs.length; start += 450) {
+		const batch = writeBatch(db);
+		oldReadings.docs.slice(start, start + 450).forEach((reading) => batch.delete(reading.ref));
+		await batch.commit();
+		removed += Math.min(450, oldReadings.docs.length - start);
+	}
+	return removed;
 }
 

@@ -86,6 +86,19 @@
           <div class="admin-event-list" id="adminEventList"></div>
         </div>
 
+        <div class="admin-form" id="classListPanel">
+          <h3>Turmas cadastradas</h3>
+          <div class="admin-event-list" id="adminClassList"></div>
+        </div>
+
+        <form class="admin-form" id="readingCleanupForm">
+          <h3>Histórico da placa</h3>
+          <p class="muted">Apague leituras antigas do sensor para reduzir o histórico armazenado.</p>
+          <label>Apagar registros com mais de <span><input id="readingRetentionDays" type="number" min="1" max="3650" value="30" required> dias</span></label>
+          <button class="remove-event cleanup-button" type="submit">Apagar registros antigos</button>
+          <small class="form-feedback" id="readingCleanupFeedback" role="status"></small>
+        </form>
+
         <div class="admin-form permissions">
           <h3>Configuração de alertas</h3>
           <label class="switch-row">Alertas por WhatsApp <input id="whatsappPermission" type="checkbox" checked><span class="switch"></span></label>
