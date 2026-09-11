@@ -2,7 +2,7 @@ import { db, subscribePortalData } from './firebase-data.js';
 import { collection, limit, onSnapshot, query } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
 
 const readingQuery = query(collection(db, 'leituras'), limit(500));
-const state = { readings: [], humidityLimit: 30, temperatureLimit: 35, chart: null, analysisChart: null, selectedDate: localDateKey(new Date()), menu: {}, events: [], classes: [], externalWind: null };
+const state = { readings: [], humidityLimit: 30, temperatureLimit: 35, chart: null, analysisChart: null, selectedDate: localDateKey(new Date()), menu: {}, events: [], externalWind: null, seenAlerts: new Set(JSON.parse(localStorage.getItem('seenAlerts') || '[]')) };
 const $ = (id) => document.getElementById(id);
 const hotCities = [
   ['Teresina', -5.0892, -42.8016],
@@ -120,6 +120,7 @@ function setView(viewName) {
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === `view-${viewName}`));
   document.querySelectorAll('.nav-link').forEach((link) => link.classList.toggle('active', link.dataset.view === viewName));
   history.replaceState(null, '', `#${viewName}`);
+  if (viewName === 'alerts') markAlertsAsSeen();
   if (viewName === 'analysis') renderAnalysis();
   if (viewName === 'data') renderDataTable();
 }
@@ -197,7 +198,18 @@ function setupSchoolViews() {
   credits.innerHTML = `<div class="view-heading"><div><span class="kicker">Desenvolvimento</span><h2>Equipe do projeto.</h2><p>Contribuições reunidas em uma experiência de monitoramento ambiental.</p></div></div><section class="panel credits-grid-new" id="creditsGrid"></section>`;
   main.append(credits);
   renderCredits();
-  subscribePortalData({ onMenu: renderSchoolMenu, onEvents: renderSchoolEvents, onClasses: renderSchoolClasses });
+  subscribePortalData({
+    onMenu: renderSchoolMenu,
+    onEvents: renderSchoolEvents,
+    onClasses: renderSchoolClasses,
+    onSettings: (settings) => {
+      const humidityLimit = Number(settings.humidityAlertLimit);
+      const temperatureLimit = Number(settings.temperatureLimit);
+      if (Number.isFinite(humidityLimit)) state.humidityLimit = humidityLimit;
+      if (Number.isFinite(temperatureLimit)) state.temperatureLimit = temperatureLimit;
+      if (state.readings.length) renderHome();
+    },
+  });
   updateSchoolSchedule();
   updateSchoolClock();
   setInterval(updateSchoolClock, 1000);
@@ -390,7 +402,7 @@ function renderHome() {
   $('staleBanner').hidden = Boolean(date && Date.now() - date.getTime() <= 120000);
   setStatus(Boolean(date && Date.now() - date.getTime() <= 120000), date ? `Atualizado às ${formatTime(date)}` : 'Offline');
 
-  const alertCount = state.readings.filter((item) => readingNumber(item.umidade) < state.humidityLimit || readingNumber(item.temperatura) >= state.temperatureLimit).length;
+  const alertCount = getUnreadAlertEntries().length;
   $('alertCount').textContent = alertCount;
   $('alertCount').hidden = alertCount === 0;
   $('insightTitle').textContent = humidity < state.humidityLimit ? 'Atenção à umidade' : temperature >= state.temperatureLimit ? 'Temperatura elevada' : 'Últimas condições registradas';
@@ -416,8 +428,38 @@ function range(field, suffix) {
   return `${Math.min(...values).toFixed(1)}${suffix} → ${Math.max(...values).toFixed(1)}${suffix}`;
 }
 
+function isAlertReading(item) {
+  return readingNumber(item.umidade) < state.humidityLimit || readingNumber(item.temperatura) >= state.temperatureLimit;
+}
+
+function alertKey(item) {
+  return String(item.id || item.timestamp || '');
+}
+
+function getAlertEntries() {
+  return state.readings.filter((item, index) => {
+    if (!isAlertReading(item)) return false;
+    const previousReading = state.readings[index + 1];
+    return !previousReading || !isAlertReading(previousReading);
+  });
+}
+
+function getUnreadAlertEntries() {
+  return getAlertEntries().filter((item) => !state.seenAlerts.has(alertKey(item)));
+}
+
+function markAlertsAsSeen() {
+  getAlertEntries().forEach((item) => state.seenAlerts.add(alertKey(item)));
+  localStorage.setItem('seenAlerts', JSON.stringify([...state.seenAlerts]));
+  const alertCount = $('alertCount');
+  if (alertCount) {
+    alertCount.textContent = '0';
+    alertCount.hidden = true;
+  }
+}
+
 function renderAlerts() {
-  const alerts = state.readings.filter((item) => readingNumber(item.umidade) < state.humidityLimit || readingNumber(item.temperatura) >= state.temperatureLimit).slice(0, 8);
+  const alerts = getAlertEntries().slice(0, 8);
   ['alertsList', 'homeAlerts'].forEach((listId) => {
     const list = $(listId);
     list.replaceChildren();
@@ -427,7 +469,12 @@ function renderAlerts() {
       const humidity = readingNumber(item.umidade);
       const alert = document.createElement('article');
       alert.className = `alert-item ${temperature >= state.temperatureLimit ? 'critical' : ''}`;
-      alert.innerHTML = `<span class="alert-symbol">!</span><div><strong>${temperature >= state.temperatureLimit ? 'Temperatura acima do limite' : 'Umidade baixa'}</strong><p>${temperature?.toFixed(1) || '--'} °C · ${humidity?.toFixed(0) || '--'}% de umidade</p></div><time>${formatTime(readingDate(item.timestamp))}</time>`;
+      const temperatureAlert = temperature >= state.temperatureLimit;
+      const humidityAlert = humidity < state.humidityLimit;
+      const alertTitle = temperatureAlert && humidityAlert
+        ? 'Temperatura acima do limite e umidade baixa'
+        : temperatureAlert ? 'Temperatura acima do limite' : 'Umidade baixa';
+      alert.innerHTML = `<span class="alert-symbol">!</span><div><strong>${alertTitle}</strong><p>${temperature?.toFixed(1) || '--'} °C · ${humidity?.toFixed(0) || '--'}% de umidade</p></div><time>${formatTime(readingDate(item.timestamp))}</time>`;
       list.append(alert);
     });
   });
