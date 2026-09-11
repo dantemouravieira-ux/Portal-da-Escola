@@ -206,9 +206,19 @@ function renderSchoolClasses(classes = []) {
   visibleClasses.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'school-class';
-    card.innerHTML = `<span>${item.year || 'Turma'}</span><strong></strong><small></small>${item.key ? `<a href="horario-ds.html?turma=${item.key}">Ver horário →</a>` : ''}`;
-    card.querySelector('strong').textContent = item.name || 'Turma sem nome';
-    card.querySelector('small').textContent = `${item.teacher || 'Professor não informado'}${item.students ? ` · ${item.students} alunos` : ''}`;
+    const year = document.createElement('span');
+    year.textContent = item.year || 'Turma';
+    const name = document.createElement('strong');
+    name.textContent = item.name || 'Turma sem nome';
+    const details = document.createElement('small');
+    details.textContent = `${item.teacher || 'Professor não informado'}${item.students ? ` · ${item.students} alunos` : ''}`;
+    card.append(year, name, details);
+    if (item.key) {
+      const link = document.createElement('a');
+      link.href = `horario-ds.html?turma=${encodeURIComponent(String(item.key))}`;
+      link.textContent = 'Ver horário →';
+      card.append(link);
+    }
     list.append(card);
   });
 }

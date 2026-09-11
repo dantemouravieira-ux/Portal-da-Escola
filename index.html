@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Painel de monitoramento ambiental da estação.">
+  <meta name="description" content="Painel de monitoramento da estação.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://www.gstatic.com; connect-src 'self' https://api.open-meteo.com https://*.googleapis.com https://*.firebaseio.com; img-src 'self' data:; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-ancestors 'none';">
   <title>Climate Guard</title>
   <link rel="icon" href="WhatsApp%20Image%202026-09-02%20at%2011.27.01.jpeg" type="image/jpeg">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -12,7 +13,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar" aria-label="Navegação do painel">
-      <div class="brand"><img class="brand-mark" src="WhatsApp%20Image%202026-09-02%20at%2011.27.01.jpeg" alt="CETI Nonato Valente"><div><strong>Climate Guard</strong><small>Monitoramento ambiental</small></div></div>
+      <div class="brand"><img class="brand-mark" src="WhatsApp%20Image%202026-09-02%20at%2011.27.01.jpeg" alt="CETI Nonato Valente"><div><strong>Climate Guard</strong><small>Monitoramento</small></div></div>
       <nav class="nav">
         <a class="nav-link" data-view="school" href="#school"><span class="nav-icon">⌂</span>Início</a>
         <a class="nav-link" data-view="data" href="#data"><span class="nav-icon">▦</span>Dados</a>
@@ -23,7 +24,7 @@
       <div class="sidebar-status" style="display:none"><span class="status-dot"></span><span id="sidebarStatus">Estação offline</span><small id="sidebarUpdated">Aguardando atualização</small></div>
     </aside>
     <div class="content">
-      <header class="topbar"><div><span class="kicker">Monitoramento ambiental</span><h1 id="greeting">Boa noite!</h1><p>Veja as condições do ambiente em tempo real.</p></div><div class="topbar-actions"><button class="ghost-button" id="headerLocationButton" type="button">⌖ Tentar localização</button><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">☀</button><div class="status-pill offline" id="statusIndicator"><span class="status-dot"></span><span id="statusText">Estação offline</span></div></div></header>
+      <header class="topbar"><div><span class="kicker"></span><h1 id="greeting">Boa noite!</h1><p>Bem vindo a Comunidade Escolar.</p></div><div class="topbar-actions"><button class="ghost-button" id="headerLocationButton" type="button">⌖ Tentar localização</button><button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">☀</button><div class="status-pill offline" id="statusIndicator"><span class="status-dot"></span><span id="statusText">Estação offline</span></div></div></header>
       <main>
         <section class="view" id="view-home">
           <div class="view-heading"><div><span class="kicker">Sinal ao vivo</span><h2>Condições do ambiente</h2></div><span class="updated" id="lastUpdated">Aguardando leitura</span></div>
