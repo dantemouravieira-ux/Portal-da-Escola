@@ -4,6 +4,13 @@ import { collection, limit, onSnapshot, query } from 'https://www.gstatic.com/fi
 const readingQuery = query(collection(db, 'leituras'), limit(500));
 const state = { readings: [], humidityLimit: 30, temperatureLimit: 35, chart: null, analysisChart: null, selectedDate: localDateKey(new Date()), menu: {}, events: [], classes: [], externalWind: null };
 const $ = (id) => document.getElementById(id);
+const hotCities = [
+  ['Teresina', -5.0892, -42.8016],
+  ['Canto do Buriti', -8.11, -42.94],
+  ['Cuiabá', -15.6014, -56.0979],
+  ['Palmas', -10.184, -48.3336],
+  ['Fortaleza', -3.7319, -38.5267],
+];
 
 function readingNumber(value) {
   const number = Number(value);
@@ -38,6 +45,41 @@ async function loadExternalWind() {
   }
 }
 
+async function loadHotCities() {
+  const list = $('hotCitiesList');
+  const updated = $('hotCitiesUpdated');
+  if (!list || !updated) return;
+  try {
+    const temperatures = await Promise.all(hotCities.map(async ([name, latitude, longitude]) => {
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&temperature_unit=celsius&timezone=America%2FFortaleza`);
+      if (!response.ok) throw new Error(`temperatura HTTP ${response.status}`);
+      const payload = await response.json();
+      const temperature = readingNumber(payload.current?.temperature_2m);
+      return temperature === null ? null : { name, temperature };
+    }));
+    const ranking = temperatures.filter(Boolean).sort((first, second) => second.temperature - first.temperature).slice(0, 3);
+    list.replaceChildren();
+    if (!ranking.length) throw new Error('nenhuma temperatura disponível');
+    ranking.forEach(({ name, temperature }, index) => {
+      const item = document.createElement('li');
+      item.className = 'hot-city';
+      item.innerHTML = `<span class="hot-city-position">${index + 1}</span><span class="hot-city-name"></span><strong></strong>`;
+      item.querySelector('.hot-city-name').textContent = name;
+      item.querySelector('strong').textContent = `${temperature.toFixed(1)}°C`;
+      list.append(item);
+    });
+    updated.textContent = `Atualizado às ${formatTime(new Date())}`;
+  } catch (error) {
+    list.replaceChildren();
+    const item = document.createElement('li');
+    item.className = 'hot-city-loading';
+    item.textContent = 'Não foi possível consultar as cidades agora.';
+    list.append(item);
+    updated.textContent = 'Indisponível';
+    console.warn('Não foi possível carregar o ranking de cidades:', error);
+  }
+}
+
 function readingDate(timestamp) {
   if (timestamp && typeof timestamp.toDate === 'function') return timestamp.toDate();
   if (typeof timestamp === 'string' && Number.isNaN(Number(timestamp))) {
@@ -68,12 +110,10 @@ function localDateKey(date) {
 
 function setStatus(online, label) {
   const indicator = $('statusIndicator');
-  const sidebarLabel = $('sidebarStatus');
   if (indicator) {
     indicator.classList.toggle('offline', !online);
     $('statusText').textContent = label;
   }
-  if (sidebarLabel) sidebarLabel.textContent = online ? 'Estação online' : 'Estação offline';
 }
 
 function setView(viewName) {
@@ -308,7 +348,6 @@ function renderHome() {
   $('stationCaption').textContent = `DHT11 · ESP32 · ${formatTime(date)}`;
   $('lastUpdated').textContent = date ? `Atualizado às ${formatTime(date)}` : 'Sem atualização';
   $('dataUpdated').textContent = date ? formatTime(date) : '--';
-  $('sidebarUpdated').textContent = date ? `Última atualização: ${formatTime(date)}` : 'Aguardando atualização';
   $('staleBanner').hidden = Boolean(date && Date.now() - date.getTime() <= 120000);
   setStatus(Boolean(date && Date.now() - date.getTime() <= 120000), date ? `Atualizado às ${formatTime(date)}` : 'Offline');
 
@@ -474,6 +513,8 @@ onSnapshot(readingQuery, (snapshot) => {
 
 loadExternalWind();
 setInterval(() => { if (!document.hidden) loadExternalWind(); }, 10 * 60 * 1000);
+loadHotCities();
+setInterval(() => { if (!document.hidden) loadHotCities(); }, 10 * 60 * 1000);
 
 const initialView = location.hash.replace('#', '') || 'school';
 setView(['home', 'data', 'alerts', 'school', 'schedules', 'credits'].includes(initialView) ? initialView : 'school');

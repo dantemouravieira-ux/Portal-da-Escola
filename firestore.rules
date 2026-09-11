@@ -8,6 +8,11 @@ service cloud.firestore {
         request.auth.token.email_verified == true;
     }
 
+    function isTrustedDevice() {
+      return request.auth != null &&
+        request.auth.token.deviceId == 'esp32-climate-guard';
+    }
+
     function hasValidText(field, maxLength) {
       return request.resource.data[field] is string &&
         request.resource.data[field].size() > 0 &&
@@ -53,7 +58,8 @@ service cloud.firestore {
 
     match /leituras/{document} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['temperatura', 'umidade', 'timestamp', 'deviceKey']) &&
+      allow create: if isTrustedDevice() &&
+        request.resource.data.keys().hasOnly(['temperatura', 'umidade', 'timestamp', 'deviceKey']) &&
         request.resource.data.deviceKey == 'esp32-climate-guard' &&
         request.resource.data.temperatura is number &&
         request.resource.data.temperatura >= -20 &&

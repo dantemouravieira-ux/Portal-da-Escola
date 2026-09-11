@@ -69,10 +69,6 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .location-button { width: 100%; margin-top: 12px; padding: 7px 5px; border: 1px solid #3c4d75; border-radius: 4px; color: #b9c2e5; background: transparent; cursor: pointer; font-size: 8px; }
 .location-button, #headerLocationButton { display: none !important; }
 .location-button:hover { border-color: var(--purple-soft); color: white; }
-.sidebar-status { display: grid; grid-template-columns: 7px 1fr; gap: 3px 7px; margin-top: auto; padding: 12px 10px; border: 1px solid var(--line); border-radius: 7px; color: #aeb9dc; font-size: 9px; }
-.sidebar-status .status-dot { grid-row: span 2; width: 6px; height: 6px; margin-top: 2px; border-radius: 50%; background: var(--purple-soft); }
-.sidebar-status small { color: #7481a8; font-size: 8px; }
-
 .content { min-width: 0; padding: 27px 34px 58px; }
 .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid #15213d; }
 .topbar h1 { margin: 7px 0 3px; font: 700 clamp(24px, 2.7vw, 34px) 'Space Grotesk', sans-serif; letter-spacing: -.045em; }
@@ -128,6 +124,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .progress span { display: block; width: 50%; height: 100%; background: var(--green); }
 
 .split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr); gap: 10px; margin-top: 11px; }
+.split:has(> .home-extra-hidden) { grid-template-columns: 1fr; }
 .panel { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
 .home-extra-hidden { display: none !important; }
 .panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
@@ -135,6 +132,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .panel-header a { color: var(--purple-soft); font-size: 9px; text-decoration: none; }
 .chart-box { position: relative; height: 315px; padding: 2px 4px 0; }
 .chart-box canvas { width: 100% !important; height: 100% !important; }
+.hot-cities { margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line); }
+.hot-cities .panel-header { margin-bottom: 9px; }
+.hot-cities .panel-header h3 { font-size: 13px; }
+.hot-cities-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hot-city { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.hot-city-position { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #071225; background: var(--yellow); font: 600 10px 'IBM Plex Mono', monospace; }
+.hot-city-name { min-width: 0; overflow: hidden; color: var(--text); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.hot-city strong { color: #ffb15c; font: 600 12px 'Space Grotesk', sans-serif; white-space: nowrap; }
+.hot-city-loading { padding: 10px; color: var(--muted); font: 9px 'IBM Plex Mono', monospace; }
 .empty { display: grid; place-items: center; min-height: 100px; color: var(--muted); font: 10px 'IBM Plex Mono', monospace; text-align: center; }
 .insight { display: grid; gap: 12px; align-content: start; min-height: 100%; }
 .insight-title { margin: 6px 0 0; color: #9ee35c; font: 600 17px 'Space Grotesk', sans-serif; }
@@ -247,7 +253,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   .nav-link { position: relative; flex: 0 0 auto; min-width: 40px; min-height: 40px; padding: 0 12px; justify-content: center; }
   .nav-icon { width: 40px; height: 40px; display: grid; place-items: center; font-size: 17px; }
   .nav-count { position: absolute; top: 2px; right: 2px; }
-  .location-box, .sidebar-status { display: none; }
+  .location-box { display: none; }
   .content { padding: 20px 16px 40px; }
   .theme-toggle, .ghost-button { min-width: 40px; min-height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; }
   .topbar-actions { gap: 10px; }
