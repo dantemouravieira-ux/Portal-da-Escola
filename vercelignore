@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+firebase-service-account*.json
+.venv/
+__pycache__/
+*.pyc
+temperature_alert.py
+temperature_alert_state.json
+requirements.txt

@@ -56,6 +56,14 @@ export function addEvent(eventData) {
 	return addDoc(collection(db, 'avisos'), eventData);
 }
 
+export function addEmailSubscription(email) {
+	return addDoc(collection(db, 'emailSubscriptions'), {
+		email: email.trim().toLowerCase(),
+		createdAt: Date.now(),
+		source: 'portal',
+	});
+}
+
 export function removeEvent(eventId) {
 	return deleteDoc(doc(db, 'avisos', eventId));
 }

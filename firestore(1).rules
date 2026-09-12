@@ -8,6 +8,11 @@ service cloud.firestore {
         request.auth.token.email_verified == true;
     }
 
+    function isTrustedDevice() {
+      return request.auth != null &&
+        request.auth.token.deviceId == 'esp32-climate-guard';
+    }
+
     function hasValidText(field, maxLength) {
       return request.resource.data[field] is string &&
         request.resource.data[field].size() > 0 &&
@@ -16,38 +21,34 @@ service cloud.firestore {
 
     match /avisos/{document} {
       allow read: if true;
-      allow create: if isAdmin() &&
+      allow create, update: if isAdmin() &&
         request.resource.data.keys().hasOnly(['title', 'date', 'details', 'createdAt']) &&
-        hasValidText('title', 120) &&
-        hasValidText('date', 80) &&
-        hasValidText('details', 500) &&
-        request.resource.data.createdAt is int;
-      allow update: if isAdmin() &&
-        request.resource.data.keys().hasOnly(['title', 'date', 'details', 'createdAt']) &&
-        hasValidText('title', 120) &&
-        hasValidText('date', 80) &&
-        hasValidText('details', 500) &&
-        request.resource.data.createdAt is int;
+        hasValidText('title', 120) && hasValidText('date', 80) &&
+        hasValidText('details', 500) && request.resource.data.createdAt is int;
       allow delete: if isAdmin();
+    }
+
+    match /emailSubscriptions/{document} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt', 'source']) &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() >= 5 &&
+        request.resource.data.email.size() <= 254 &&
+        request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$') &&
+        request.resource.data.createdAt is int &&
+        request.resource.data.source == 'portal';
+      allow read, update, delete: if isAdmin();
     }
 
     match /turmas/{document} {
       allow read: if true;
       allow create, update: if isAdmin() &&
         request.resource.data.keys().hasOnly(['name', 'teacher', 'contact', 'students', 'materials', 'tasks', 'observations', 'year']) &&
-        hasValidText('name', 120) &&
-        hasValidText('teacher', 120) &&
-        request.resource.data.students is int &&
-        request.resource.data.students >= 1 &&
-        request.resource.data.students <= 200 &&
-        request.resource.data.contact is string &&
-        request.resource.data.contact.size() <= 200 &&
-        request.resource.data.materials is string &&
-        request.resource.data.materials.size() <= 2000 &&
-        request.resource.data.tasks is string &&
-        request.resource.data.tasks.size() <= 2000 &&
-        request.resource.data.observations is string &&
-        request.resource.data.observations.size() <= 2000 &&
+        hasValidText('name', 120) && hasValidText('teacher', 120) &&
+        request.resource.data.students is int && request.resource.data.students >= 1 && request.resource.data.students <= 200 &&
+        request.resource.data.contact is string && request.resource.data.contact.size() <= 200 &&
+        request.resource.data.materials is string && request.resource.data.materials.size() <= 2000 &&
+        request.resource.data.tasks is string && request.resource.data.tasks.size() <= 2000 &&
+        request.resource.data.observations is string && request.resource.data.observations.size() <= 2000 &&
         hasValidText('year', 60);
       allow delete: if isAdmin();
     }
@@ -61,20 +62,15 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin() && document == 'portal' &&
         request.resource.data.keys().hasOnly(['humidityAlertLimit', 'temperatureLimit', 'monitorPoint']) &&
-        request.resource.data.humidityAlertLimit is number &&
-        request.resource.data.humidityAlertLimit >= 0 &&
-        request.resource.data.humidityAlertLimit <= 100 &&
-        request.resource.data.temperatureLimit is number &&
-        request.resource.data.temperatureLimit >= 0 &&
-        request.resource.data.temperatureLimit <= 60 &&
-        request.resource.data.monitorPoint is string &&
-        request.resource.data.monitorPoint.size() > 0 &&
-        request.resource.data.monitorPoint.size() <= 120;
+        request.resource.data.humidityAlertLimit is number && request.resource.data.humidityAlertLimit >= 0 && request.resource.data.humidityAlertLimit <= 100 &&
+        request.resource.data.temperatureLimit is number && request.resource.data.temperatureLimit >= 0 && request.resource.data.temperatureLimit <= 60 &&
+        request.resource.data.monitorPoint is string && request.resource.data.monitorPoint.size() > 0 && request.resource.data.monitorPoint.size() <= 120;
     }
 
     match /leituras/{document} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['temperatura', 'umidade', 'timestamp', 'deviceKey']) &&
+      allow create: if isTrustedDevice() &&
+        request.resource.data.keys().hasOnly(['temperatura', 'umidade', 'timestamp', 'deviceKey']) &&
         request.resource.data.deviceKey == 'esp32-climate-guard' &&
         request.resource.data.temperatura is number &&
         request.resource.data.temperatura >= -20 &&

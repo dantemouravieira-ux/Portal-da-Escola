@@ -1,8 +1,8 @@
-import { db, subscribePortalData } from './firebase-data.js';
+import { addEmailSubscription, db, subscribePortalData } from './firebase-data.js';
 import { collection, limit, onSnapshot, query } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
 
 const readingQuery = query(collection(db, 'leituras'), limit(500));
-const state = { readings: [], humidityLimit: 30, temperatureLimit: 35, chart: null, analysisChart: null, selectedDate: localDateKey(new Date()), menu: {}, events: [], externalWind: null, seenAlerts: new Set(JSON.parse(localStorage.getItem('seenAlerts') || '[]')) };
+const state = { readings: [], humidityLimit: 30, temperatureLimit: 35, chart: null, analysisChart: null, selectedDate: localDateKey(new Date()), menu: {}, events: [], externalWind: null, notificationEnabled: localStorage.getItem('notificationEnabled') === 'true', knownEventIds: null, seenAlerts: new Set(JSON.parse(localStorage.getItem('seenAlerts') || '[]')) };
 const $ = (id) => document.getElementById(id);
 const hotCities = [
   ['Teresina', -5.0892, -42.8016],
@@ -116,6 +116,75 @@ function setStatus(online, label) {
   }
 }
 
+function updateNotificationButton(label, enabled = state.notificationEnabled) {
+  const button = $('notificationToggle');
+  if (!button) return;
+  button.textContent = label;
+  button.setAttribute('aria-pressed', String(enabled));
+  button.classList.toggle('enabled', enabled);
+}
+
+async function requestNotifications() {
+  if (!('Notification' in window)) {
+    updateNotificationButton('Avisos indisponíveis', false);
+    return;
+  }
+  if (!window.isSecureContext) {
+    updateNotificationButton('Use HTTPS para ativar', false);
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  state.notificationEnabled = permission === 'granted';
+  localStorage.setItem('notificationEnabled', String(state.notificationEnabled));
+  updateNotificationButton(state.notificationEnabled ? '◉ Avisos ativados' : '◌ Ativar avisos');
+}
+
+function toggleNotifications() {
+  if (state.notificationEnabled) {
+    state.notificationEnabled = false;
+    localStorage.setItem('notificationEnabled', 'false');
+    updateNotificationButton('◌ Ativar avisos', false);
+    return;
+  }
+  requestNotifications();
+}
+
+function setupNotifications() {
+  const button = $('notificationToggle');
+  if (!button) return;
+  if (!('Notification' in window)) {
+    updateNotificationButton('Avisos indisponíveis', false);
+    button.disabled = true;
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    state.notificationEnabled = false;
+    updateNotificationButton('Permissão bloqueada', false);
+    return;
+  }
+  if (Notification.permission !== 'granted') state.notificationEnabled = false;
+  updateNotificationButton(state.notificationEnabled ? '◉ Avisos ativados' : '◌ Ativar avisos');
+  button.addEventListener('click', toggleNotifications);
+}
+
+function notifyNewEvents(events) {
+  const eventIds = new Set(events.map((event) => String(event.id)));
+  if (!state.knownEventIds) {
+    state.knownEventIds = eventIds;
+    return;
+  }
+  const newEvents = events.filter((event) => !state.knownEventIds.has(String(event.id)));
+  state.knownEventIds = eventIds;
+  if (!state.notificationEnabled || Notification.permission !== 'granted' || document.hidden === false) return;
+  newEvents.forEach((event) => {
+    const notification = new Notification(event.title || 'Novo aviso escolar', {
+      body: event.details || 'Confira a Central de avisos do portal.',
+      tag: `aviso-${event.id}`,
+    });
+    notification.onclick = () => { window.focus(); setView('school'); notification.close(); };
+  });
+}
+
 function setView(viewName) {
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === `view-${viewName}`));
   document.querySelectorAll('.nav-link').forEach((link) => link.classList.toggle('active', link.dataset.view === viewName));
@@ -180,6 +249,45 @@ function setupSchoolViews() {
   school.innerHTML = `<nav class="school-tabs" aria-label="Seções escolares"><a class="active" href="#school">Agora</a><a href="#schoolTimeline">Aulas</a><a href="#schoolMenuMain">Almoço</a><a href="#schoolNotices">Avisos</a><a href="#schoolClasses">Turmas</a><a href="#home" data-open-view="home">Clima</a><a href="admin.html">Administração</a></nav><div class="school-hero"><section class="school-now"><span class="kicker">O que está acontecendo agora?</span><h2 id="schoolCurrentTitle">Atividades encerradas</h2><p id="schoolCurrentDetail">Até o próximo dia letivo</p><div class="school-dash" aria-hidden="true">—　—　•　—　—　•　—</div><small id="schoolNext">Próxima aula: amanhã, 06:50</small></section><section class="panel school-menu" id="schoolMenuPanel"><div class="panel-header"><div><span class="kicker">Almoço</span><h3>Cardápio de hoje</h3></div><span class="status-pill">servido hoje</span></div><strong id="schoolMenuMain">Cardápio ainda não publicado</strong><p id="schoolMenuDetails">Consulte a administração para saber o almoço de hoje.</p></section></div><section class="panel school-timeline-panel"><div class="panel-header"><div><span class="kicker">Aulas</span><h3>Linha do tempo do dia</h3></div><span class="updated" id="schoolDateLabel"></span></div><div class="school-timeline" id="schoolTimeline"></div></section><section class="panel school-summary"><div class="panel-header"><div><span class="kicker">Resumo do dia</span><h3>Na escola hoje</h3></div><span class="updated" id="schoolSummaryDate"></span></div><div class="school-summary-grid"><article><span>Horário</span><strong>06:50 · 16:10</strong><small id="schoolSummarySchedule">A programação do dia</small></article><article><span>Aula em andamento</span><strong id="schoolSummaryClass">Atividades encerradas</strong><small id="schoolSummaryDetail">Até o próximo dia letivo</small></article><article class="urgent"><span>Avisos urgentes</span><strong id="schoolSummaryNotice">Nenhum aviso urgente</strong><small>Central de avisos</small></article></div></section><div class="school-layout school-lower"><section class="panel"><div class="panel-header"><div><span class="kicker">Avisos</span><h3>Central de avisos</h3></div><span class="updated" id="schoolEventCount">0 publicados</span></div><div class="school-notices" id="schoolNotices"></div></section><section class="panel"><div class="panel-header"><div><span class="kicker">Turmas</span><h3>Horários e perfis</h3></div><span class="updated" id="schoolClassCount">0 cadastradas</span></div><div class="school-classes" id="schoolClasses"></div></section></div>`;
   school.querySelector('.school-tabs')?.remove();
   main.append(school);
+  const emailPanel = document.createElement('section');
+  emailPanel.className = 'panel email-subscription-panel';
+  emailPanel.innerHTML = '<div><span class="kicker">Receba novidades</span><h3>Avisos por e-mail</h3><p>Cadastre seu e-mail para receber os próximos comunicados da escola.</p></div><form class="email-subscription-form" id="emailSubscriptionForm"><label for="subscriberEmail">Seu e-mail</label><div class="email-subscription-row"><input id="subscriberEmail" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" maxlength="254" required><button class="primary-button" type="submit">Quero receber</button></div><small id="emailSubscriptionFeedback" class="form-feedback" role="status" aria-live="polite"></small><div id="emailSubscriptionMessage" class="email-subscription-message" role="status" aria-live="polite" hidden></div></form>';
+  main.append(emailPanel);
+  emailPanel.querySelector('form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const input = form.querySelector('input');
+    const feedback = $('emailSubscriptionFeedback');
+    const message = $('emailSubscriptionMessage');
+    const button = form.querySelector('button');
+    const email = input.value.trim().toLowerCase();
+    if (!input.checkValidity()) {
+      feedback.textContent = 'Informe um e-mail válido.';
+      message.hidden = true;
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Salvando...';
+    feedback.textContent = 'Salvando seu cadastro...';
+    message.hidden = true;
+    try {
+      await addEmailSubscription(email);
+      form.reset();
+      feedback.textContent = '';
+      message.textContent = 'Cadastro realizado! Você receberá os próximos avisos por e-mail.';
+      message.className = 'email-subscription-message success';
+      message.hidden = false;
+    } catch (error) {
+      feedback.textContent = 'Não foi possível salvar agora. Tente novamente.';
+      message.textContent = 'Não foi possível concluir o cadastro. Tente novamente.';
+      message.className = 'email-subscription-message error';
+      message.hidden = false;
+      console.error('Falha ao cadastrar e-mail:', error);
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Quero receber';
+    }
+  });
   school.querySelector('.school-dash')?.remove();
   const schoolClock = document.createElement('time');
   schoolClock.className = 'school-clock';
@@ -217,29 +325,48 @@ function setupSchoolViews() {
 }
 
 const schoolPeriods = [['06:50', 'Aula 1'], ['07:50', 'Aula 2'], ['08:50', 'Intervalo'], ['09:10', 'Aula 3'], ['10:10', 'Aula 4'], ['11:10', 'Aula 5'], ['12:10', 'Almoço'], ['12:50', 'Aula 6'], ['13:50', 'Aula 7'], ['14:50', 'Intervalo'], ['15:10', 'Aula 8']];
+
+function parseSchoolMinutes(time) {
+  const [hour, minute] = time.split(':').map(Number);
+  return hour * 60 + minute;
+}
+
+function getNextSchoolStart(now) {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentIndex = schoolPeriods.findIndex(([start], index) => {
+    const end = schoolPeriods[index + 1]?.[0] || '16:10';
+    return currentMinutes >= parseSchoolMinutes(start) && currentMinutes < parseSchoolMinutes(end);
+  });
+
+  const target = new Date(now);
+  if (currentIndex >= 0) {
+    const nextStart = schoolPeriods[currentIndex + 1]?.[0] || '16:10';
+    const [hour, minute] = nextStart.split(':').map(Number);
+    target.setHours(hour, minute, 0, 0);
+  } else {
+    const nextStart = schoolPeriods.find(([start]) => parseSchoolMinutes(start) > currentMinutes)?.[0];
+    if (nextStart) {
+      const [hour, minute] = nextStart.split(':').map(Number);
+      target.setHours(hour, minute, 0, 0);
+    } else {
+      target.setDate(target.getDate() + 1);
+      target.setHours(6, 50, 0, 0);
+    }
+  }
+
+  while (target.getDay() === 0 || target.getDay() === 6) {
+    target.setDate(target.getDate() + 1);
+    target.setHours(6, 50, 0, 0);
+  }
+
+  return target;
+}
+
 function updateSchoolClock() {
   const clock = $('schoolClock');
   if (!clock) return;
   const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const parseMinutes = (time) => {
-    const [hour, minute] = time.split(':').map(Number);
-    return hour * 60 + minute;
-  };
-  const currentIndex = schoolPeriods.findIndex(([start], index) => {
-    const end = schoolPeriods[index + 1]?.[0] || '16:10';
-    return currentMinutes >= parseMinutes(start) && currentMinutes < parseMinutes(end);
-  });
-  let target = new Date(now);
-  let nextStart;
-  if (currentIndex >= 0) {
-    nextStart = schoolPeriods[currentIndex + 1]?.[0] || '16:10';
-  } else {
-    nextStart = schoolPeriods.find(([start]) => parseMinutes(start) > currentMinutes)?.[0] || '06:50';
-    if (currentMinutes >= parseMinutes(nextStart)) target.setDate(target.getDate() + 1);
-  }
-  const [nextHour, nextMinute] = nextStart.split(':').map(Number);
-  target.setHours(nextHour, nextMinute, 0, 0);
+  const target = getNextSchoolStart(now);
   const remaining = Math.max(0, target.getTime() - now.getTime());
   const totalSeconds = Math.floor(remaining / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -251,6 +378,10 @@ function updateSchoolClock() {
 function updateSchoolSchedule() {
   const timeline = $('schoolTimeline'); if (!timeline) return;
   const now = new Date(); const minutes = now.getHours() * 60 + now.getMinutes();
+  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+  const nextSchoolStart = getNextSchoolStart(now);
+  const nextSchoolLabel = nextSchoolStart.toLocaleDateString('pt-BR', { weekday: 'long' }) + ', 06:50';
+
   $('schoolDateLabel').textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
   timeline.replaceChildren();
   schoolPeriods.forEach(([start, label], index) => {
@@ -258,14 +389,14 @@ function updateSchoolSchedule() {
     const item = document.createElement('div'); item.className = `school-period${minutes >= startMinutes && minutes < endMinutes ? ' current' : ''}${minutes >= endMinutes ? ' done' : ''}`; item.innerHTML = `<span>${start}</span><strong>${label}</strong><small>${minutes >= endMinutes ? 'Encerrado' : minutes >= startMinutes ? 'Em andamento' : 'Próximo'}</small>`; timeline.append(item);
   });
   const current = schoolPeriods.find(([start], index) => { const [hour, minute] = start.split(':').map(Number); const [nextHour, nextMinute] = (schoolPeriods[index + 1]?.[0] || '16:10').split(':').map(Number); return minutes >= hour * 60 + minute && minutes < nextHour * 60 + nextMinute; });
-  $('schoolCurrentTitle').textContent = current ? `${current[1]} em andamento` : minutes < 410 ? 'Aulas começam em breve' : 'Atividades encerradas';
+  $('schoolCurrentTitle').textContent = current ? `${current[1]} em andamento` : isWeekend ? 'Aulas voltam na segunda' : minutes < 410 ? 'Aulas começam em breve' : 'Atividades encerradas';
   const schoolCountdown = $('schoolCountdown');
-  if (schoolCountdown) schoolCountdown.textContent = current ? `Próxima mudança às ${schoolPeriods[schoolPeriods.indexOf(current) + 1]?.[0] || '16:10'}` : 'Próximo dia letivo às 06:50';
-  $('schoolCurrentDetail').textContent = current ? 'Período letivo em andamento' : 'Até o próximo dia letivo';
-  $('schoolNext').textContent = current ? `Próxima aula: ${schoolPeriods[schoolPeriods.indexOf(current) + 1]?.[0] || '16:10'}` : 'Próxima aula: amanhã, 06:50';
+  if (schoolCountdown) schoolCountdown.textContent = current ? `Próxima mudança às ${schoolPeriods[schoolPeriods.indexOf(current) + 1]?.[0] || '16:10'}` : `Próximo dia letivo às ${nextSchoolLabel}`;
+  $('schoolCurrentDetail').textContent = current ? 'Período letivo em andamento' : isWeekend ? 'Recesso de fim de semana' : 'Até o próximo dia letivo';
+  $('schoolNext').textContent = current ? `Próxima aula: ${schoolPeriods[schoolPeriods.indexOf(current) + 1]?.[0] || '16:10'}` : `Próxima aula: ${nextSchoolLabel}`;
   $('schoolSummaryDate').textContent = $('schoolDateLabel').textContent;
-  $('schoolSummaryClass').textContent = current ? `${current[1]} em andamento` : 'Atividades encerradas';
-  $('schoolSummaryDetail').textContent = current ? 'Período letivo em andamento' : 'Até o próximo dia letivo';
+  $('schoolSummaryClass').textContent = current ? `${current[1]} em andamento` : isWeekend ? 'Aulas voltam na segunda' : 'Atividades encerradas';
+  $('schoolSummaryDetail').textContent = current ? 'Período letivo em andamento' : isWeekend ? 'Recesso de fim de semana' : 'Até o próximo dia letivo';
 }
 
 function renderSchoolMenu(menu) {
@@ -275,6 +406,7 @@ function renderSchoolMenu(menu) {
 }
 
 function renderSchoolEvents(events = []) {
+  notifyNewEvents(events);
   state.events = events; $('schoolEventCount').textContent = `${events.length} publicados`; const list = $('schoolNotices'); list.replaceChildren();
   if (!events.length) { list.innerHTML = '<div class="empty">Nenhum aviso publicado.</div>'; return; }
   events.slice(0, 6).forEach((event) => { const item = document.createElement('article'); item.className = 'school-notice'; item.innerHTML = `<strong></strong><p></p>`; item.querySelector('strong').textContent = event.title || 'Aviso'; item.querySelector('p').textContent = `${event.date || 'Sem data'} · ${event.details || 'Sem detalhes'}`; list.append(item); });
@@ -590,6 +722,7 @@ $('selectedDate').addEventListener('change', (event) => {
   renderDataTable();
 });
 $('selectedDate').value = state.selectedDate;
+setupNotifications();
 
 onSnapshot(readingQuery, (snapshot) => {
   state.readings = snapshot.docs

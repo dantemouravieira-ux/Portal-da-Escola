@@ -1,0 +1,16 @@
+# Caminho para a chave JSON da conta de serviço do Firebase Admin SDK.
+# Use um caminho local fora do repositório ou configure por variável de ambiente.
+FIREBASE_SERVICE_ACCOUNT=./firebase-service-account.json
+
+# SMTP (exemplo Gmail: gere uma senha de app, não use sua senha normal)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=seu-email@exemplo.com
+SMTP_PASSWORD=cole-sua-senha-de-app-aqui
+SENDER_EMAIL=seu-email@exemplo.com
+SENDER_NAME=Climate Guard
+
+# O painel usa 35 por padrão; quando definido no Firestore, ele tem prioridade
+TEMPERATURE_LIMIT=35
+POLL_SECONDS=60
+STATE_FILE=temperature_alert_state.json
